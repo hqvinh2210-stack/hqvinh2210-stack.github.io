@@ -1,0 +1,8 @@
+{
+  "project": "Olist Brazilian E-Commerce Data Warehouse",
+  "source": "Brazilian E-Commerce Public Dataset by Olist",
+  "period": "2016-09 to 2018-10",
+  "generated_at": "2026-07-16T03:03:06Z",
+  "currency": "BRL",
+  "engine": "DuckDB → star schema → JSON for GitHub Pages"
+}

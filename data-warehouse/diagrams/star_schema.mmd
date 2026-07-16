@@ -1,0 +1,134 @@
+%% Olist E-Commerce Data Warehouse — Star Schema
+%% Render: https://mermaid.live or any Mermaid-compatible viewer
+
+erDiagram
+    dim_date ||--o{ fact_order_item : "purchase / ship / deliver"
+    dim_date ||--o{ fact_payment : "purchase"
+    dim_date ||--o{ fact_review : "review / purchase"
+    dim_date ||--o{ fact_order : "purchase / deliver"
+
+    dim_customer ||--o{ fact_order_item : has
+    dim_customer ||--o{ fact_payment : has
+    dim_customer ||--o{ fact_review : has
+    dim_customer ||--o{ fact_order : has
+
+    dim_product ||--o{ fact_order_item : contains
+    dim_seller ||--o{ fact_order_item : sells
+
+    dim_geography ||--o{ dim_customer : "lives in"
+    dim_geography ||--o{ dim_seller : "based in"
+    dim_geography ||--o{ fact_order_item : "cust & seller geo"
+
+    dim_order_status ||--o{ fact_order_item : status
+    dim_order_status ||--o{ fact_order : status
+    dim_payment_type ||--o{ fact_payment : method
+
+    dim_date {
+        int date_sk PK
+        date full_date
+        int year
+        int quarter
+        int month
+        string month_name
+        int day_of_week
+        boolean is_weekend
+        string year_month
+    }
+
+    dim_customer {
+        int customer_sk PK
+        string customer_unique_id BK
+        string customer_city
+        string customer_state
+        int geo_sk FK
+    }
+
+    dim_product {
+        int product_sk PK
+        string product_id BK
+        string category_name_en
+        string category_name_pt
+        int product_weight_g
+        float volume_cm3
+    }
+
+    dim_seller {
+        int seller_sk PK
+        string seller_id BK
+        string seller_city
+        string seller_state
+        int geo_sk FK
+    }
+
+    dim_geography {
+        int geo_sk PK
+        string zip_code_prefix BK
+        string city
+        string state
+        string region
+        float latitude
+        float longitude
+    }
+
+    dim_order_status {
+        int order_status_sk PK
+        string order_status
+        boolean is_success
+        boolean is_terminal
+    }
+
+    dim_payment_type {
+        int payment_type_sk PK
+        string payment_type
+        string payment_group
+    }
+
+    fact_order_item {
+        int order_item_sk PK
+        int date_purchase_sk FK
+        int customer_sk FK
+        int product_sk FK
+        int seller_sk FK
+        int order_status_sk FK
+        string order_id
+        int order_item_id
+        decimal price
+        decimal freight_value
+        decimal item_total
+        int delivery_days
+        boolean is_late
+    }
+
+    fact_payment {
+        int payment_sk PK
+        int date_purchase_sk FK
+        int customer_sk FK
+        int payment_type_sk FK
+        string order_id
+        int payment_sequential
+        int payment_installments
+        decimal payment_value
+    }
+
+    fact_review {
+        int review_sk PK
+        int date_review_sk FK
+        int customer_sk FK
+        string order_id
+        string review_id
+        int review_score
+        boolean has_comment
+    }
+
+    fact_order {
+        int order_sk PK
+        int date_purchase_sk FK
+        int customer_sk FK
+        int order_status_sk FK
+        string order_id
+        int order_item_count
+        decimal order_gmv
+        decimal order_freight
+        int delivery_days
+        boolean is_on_time
+    }
