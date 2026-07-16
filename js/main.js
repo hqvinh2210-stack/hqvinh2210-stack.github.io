@@ -4,7 +4,9 @@
  */
 
 const DATA_URLS = [
+    "js/dashboard.json",
     "assets/data/dashboard.json",
+    "/js/dashboard.json",
     "/assets/data/dashboard.json",
 ];
 
