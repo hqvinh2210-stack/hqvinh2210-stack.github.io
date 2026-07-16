@@ -578,6 +578,13 @@ img {
     max-height: 320px;
 }
 
+.chart-fallback {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
 /* ===== LOAD ERROR ===== */
 .load-error {
     display: flex;
