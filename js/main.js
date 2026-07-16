@@ -1091,83 +1091,129 @@ function paintMl(payload) {
         });
     }
 
-    const scatter = rfm.scatter_sample || [];
-    const scCtx = document.getElementById("mlScatterChart");
-    if (scCtx && scatter.length && chartAvailable()) {
-        const bySeg = {};
-        scatter.forEach(function (p) {
-            if (!bySeg[p.segment]) bySeg[p.segment] = [];
-            bySeg[p.segment].push({ x: p.r, y: p.m });
-        });
-        const segNames = Object.keys(bySeg);
-        new Chart(scCtx, {
-            type: "scatter",
-            data: {
-                datasets: segNames.map(function (name, i) {
-                    return {
-                        label: name,
-                        data: bySeg[name],
-                        backgroundColor: (COLORS.palette[i % COLORS.palette.length] || "#00d4ff") + "99",
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                    };
-                }),
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: 2.4,
-                plugins: {
-                    legend: {
-                        position: "top",
-                        align: "start",
-                        labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 } },
-                    },
-                    tooltip: Object.assign({}, TOOLTIP, {
-                        callbacks: {
-                            label: function (ctx) {
-                                return (
-                                    ctx.dataset.label +
-                                    ": R=" +
-                                    ctx.parsed.x +
-                                    "d, M=" +
-                                    fmtMoneyBRL(ctx.parsed.y)
-                                );
-                            },
-                        },
-                    }),
-                },
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: "Recency (days since last order)",
-                            color: "#64748b",
-                            font: { size: 11 },
-                        },
-                        grid: { color: "rgba(255,255,255,0.04)" },
-                        ticks: { font: { size: 10 } },
-                    },
-                    y: {
-                        title: {
-                            display: true,
-                            text: "Monetary (BRL)",
-                            color: "#64748b",
-                            font: { size: 11 },
-                        },
-                        beginAtZero: true,
-                        grid: { color: "rgba(255,255,255,0.04)" },
-                        ticks: {
-                            font: { size: 10 },
-                            callback: function (v) {
-                                return fmtCompact(v);
-                            },
-                        },
-                    },
-                },
-            },
-        });
+    renderRfmScatter3d(rfm.scatter_sample || []);
+}
+
+/**
+ * Interactive 3D RFM scatter (Plotly) — drag to rotate, scroll to zoom.
+ * Axes: X=Recency (days), Y=Frequency, Z=Monetary (BRL)
+ */
+function renderRfmScatter3d(scatter) {
+    const el = document.getElementById("mlScatter3d");
+    if (!el || !scatter.length) return;
+
+    if (typeof Plotly === "undefined") {
+        el.innerHTML =
+            '<p class="chart-fallback">Plotly.js failed to load — 3D chart unavailable.</p>';
+        return;
     }
+
+    const bySeg = {};
+    scatter.forEach(function (p) {
+        const seg = p.segment || "Unknown";
+        if (!bySeg[seg]) bySeg[seg] = { r: [], f: [], m: [] };
+        bySeg[seg].r.push(p.r);
+        bySeg[seg].f.push(p.f != null ? p.f : 1);
+        bySeg[seg].m.push(p.m);
+    });
+
+    const segNames = Object.keys(bySeg);
+    const traces = segNames.map(function (name, i) {
+        const c = COLORS.palette[i % COLORS.palette.length] || "#00d4ff";
+        return {
+            type: "scatter3d",
+            mode: "markers",
+            name: name,
+            x: bySeg[name].r,
+            y: bySeg[name].f,
+            z: bySeg[name].m,
+            text: bySeg[name].r.map(function (_, j) {
+                return (
+                    name +
+                    "<br>R: " +
+                    bySeg[name].r[j] +
+                    " days<br>F: " +
+                    bySeg[name].f[j] +
+                    "<br>M: R$ " +
+                    Number(bySeg[name].m[j]).toLocaleString("en-US")
+                );
+            }),
+            hoverinfo: "text",
+            marker: {
+                size: 3.5,
+                color: c,
+                opacity: 0.75,
+                line: { width: 0 },
+            },
+        };
+    });
+
+    const layout = {
+        paper_bgcolor: "rgba(0,0,0,0)",
+        plot_bgcolor: "rgba(0,0,0,0)",
+        font: { color: "#94a3b8", family: "Inter, sans-serif", size: 11 },
+        margin: { l: 0, r: 0, t: 8, b: 0 },
+        showlegend: true,
+        legend: {
+            orientation: "h",
+            y: 1.08,
+            x: 0,
+            font: { size: 11, color: "#94a3b8" },
+            bgcolor: "rgba(0,0,0,0)",
+        },
+        scene: {
+            bgcolor: "rgba(26, 35, 50, 0.6)",
+            xaxis: {
+                title: { text: "Recency (days)", font: { size: 12, color: "#00d4ff" } },
+                gridcolor: "rgba(255,255,255,0.08)",
+                zerolinecolor: "rgba(255,255,255,0.15)",
+                color: "#94a3b8",
+                backgroundcolor: "rgba(10, 14, 26, 0.4)",
+                showbackground: true,
+            },
+            yaxis: {
+                title: { text: "Frequency", font: { size: 12, color: "#8b5cf6" } },
+                gridcolor: "rgba(255,255,255,0.08)",
+                zerolinecolor: "rgba(255,255,255,0.15)",
+                color: "#94a3b8",
+                backgroundcolor: "rgba(10, 14, 26, 0.4)",
+                showbackground: true,
+            },
+            zaxis: {
+                title: { text: "Monetary (BRL)", font: { size: 12, color: "#51cf66" } },
+                gridcolor: "rgba(255,255,255,0.08)",
+                zerolinecolor: "rgba(255,255,255,0.15)",
+                color: "#94a3b8",
+                backgroundcolor: "rgba(10, 14, 26, 0.4)",
+                showbackground: true,
+            },
+            camera: {
+                eye: { x: 1.55, y: 1.45, z: 1.15 },
+            },
+            aspectmode: "cube",
+            dragmode: "orbit",
+        },
+        hovermode: "closest",
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: true,
+        displaylogo: false,
+        modeBarButtonsToRemove: ["toImage", "sendDataToCloud", "lasso2d", "select2d"],
+        scrollZoom: true,
+    };
+
+    Plotly.newPlot(el, traces, layout, config);
+
+    // Keep aspect on resize
+    window.addEventListener(
+        "resize",
+        function () {
+            Plotly.Plots.resize(el);
+        },
+        { passive: true }
+    );
 }
 
 async function init() {

@@ -359,11 +359,15 @@
                 </div>
                 <div class="chart-card full-width">
                     <div class="chart-header">
-                        <h3><i class="fa-solid fa-circle-nodes"></i> Recency vs Monetary (sample)</h3>
-                        <span class="chart-period">Downsampled scatter</span>
+                        <h3><i class="fa-solid fa-cube"></i> RFM 3D scatter (sample)</h3>
+                        <span class="chart-period">Drag to rotate · scroll to zoom · R · F · M</span>
                     </div>
-                    <div class="chart-body">
-                        <canvas id="mlScatterChart"></canvas>
+                    <div class="chart-body chart-body-3d">
+                        <div id="mlScatter3d" class="plotly-3d"></div>
+                        <p class="chart-hint">
+                            <i class="fa-solid fa-hand-pointer"></i>
+                            Kéo chuột để xoay · lăn bánh xe để zoom · trục X = Recency (ngày), Y = Frequency, Z = Monetary (BRL)
+                        </p>
                     </div>
                 </div>
             </div>
@@ -521,6 +525,8 @@
             document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"><\/script>');
         }
     </script>
+    <!-- Plotly for interactive 3D RFM scatter -->
+    <script src="https://cdn.jsdelivr.net/npm/plotly.js-dist-min@2.27.0/plotly.min.js"></script>
     <!-- Data first (no fetch required), then app. js/ path is reliable on GitHub Pages -->
     <script src="js/dashboard-data.js"></script>
     <script src="js/ml_results.js"></script>
