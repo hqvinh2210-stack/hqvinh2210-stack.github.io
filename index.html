@@ -51,6 +51,9 @@
                 <a href="#dashboard" class="btn btn-primary">
                     <i class="fa-solid fa-gauge-high"></i> View Dashboard
                 </a>
+                <a href="#ml" class="btn btn-outline">
+                    <i class="fa-solid fa-brain"></i> RFM Segments
+                </a>
                 <a href="#architecture" class="btn btn-outline">
                     <i class="fa-solid fa-sitemap"></i> Architecture
                 </a>
@@ -212,6 +215,199 @@
         </div>
     </section>
 
+    <!-- ===== MACHINE LEARNING — RFM ===== -->
+    <section id="ml" class="ml-section">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Machine Learning</span>
+                <h2>RFM Customer Segmentation</h2>
+                <p>Unsupervised clustering on Recency · Frequency · Monetary from the gold warehouse</p>
+            </div>
+
+            <div id="mlLoadError" class="load-error" hidden>
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>Could not load ML results. Run <code>python -m ml.run_ml</code> in <code>data-warehouse/</code>.</span>
+            </div>
+
+            <div class="kpi-grid ml-kpi" id="mlKpiGrid">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #00d4ff"><i class="fa-solid fa-users"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="mlCustomers">—</span>
+                    </div>
+                    <span class="kpi-label">Customers (delivered)</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #8b5cf6"><i class="fa-solid fa-diagram-project"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="mlK">—</span>
+                    </div>
+                    <span class="kpi-label">Selected k</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #51cf66"><i class="fa-solid fa-chart-area"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="mlSilhouette">—</span>
+                    </div>
+                    <span class="kpi-label">Silhouette ↑</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #3b82f6"><i class="fa-solid fa-compress"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="mlDbi">—</span>
+                    </div>
+                    <span class="kpi-label">Davies–Bouldin ↓</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #ec4899"><i class="fa-solid fa-layer-group"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="mlChi">—</span>
+                    </div>
+                    <span class="kpi-label">Calinski–Harabasz ↑</span>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #fcc419"><i class="fa-solid fa-bullseye"></i></div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" id="mlInertia">—</span>
+                    </div>
+                    <span class="kpi-label">Inertia (SSE) ↓</span>
+                </div>
+            </div>
+
+            <div class="schema-card eval-card">
+                <h3><i class="fa-solid fa-clipboard-check"></i> Model evaluation</h3>
+                <p class="eval-note" id="mlEvalNote">Internal validation metrics for unsupervised K-Means on scaled RFM features.</p>
+                <div class="table-wrap">
+                    <table class="ml-table" id="mlEvalTable">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                                <th>Direction</th>
+                                <th>Meaning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="4" class="muted">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-wrap" style="margin-top: 16px">
+                    <table class="ml-table" id="mlByKTable">
+                        <thead>
+                            <tr>
+                                <th>k</th>
+                                <th>Silhouette ↑</th>
+                                <th>Davies–Bouldin ↓</th>
+                                <th>Calinski–Harabasz ↑</th>
+                                <th>Inertia ↓</th>
+                                <th>Selected</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="6" class="muted">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="charts-grid" style="margin-top: 24px">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-line"></i> Silhouette vs k</h3>
+                        <span class="chart-period">Higher is better</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="mlSilhouetteByKChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-area"></i> Elbow (Inertia vs k)</h3>
+                        <span class="chart-period">Lower is better</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="mlElbowChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Segment size</h3>
+                        <span class="chart-period">Customer count</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="mlSegmentSizeChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-coins"></i> GMV share by segment</h3>
+                        <span class="chart-period">% of total GMV</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="mlGmvShareChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-bar"></i> Mean RFM by segment</h3>
+                        <span class="chart-period">R (days) · F (orders) · M (BRL)</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="mlRfmProfileChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-circle-nodes"></i> Recency vs Monetary (sample)</h3>
+                        <span class="chart-period">Downsampled scatter</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="mlScatterChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="schema-card ml-table-card">
+                <h3><i class="fa-solid fa-table"></i> Segment profiles</h3>
+                <div class="table-wrap">
+                    <table class="ml-table" id="mlSegmentTable">
+                        <thead>
+                            <tr>
+                                <th>Segment</th>
+                                <th>Customers</th>
+                                <th>%</th>
+                                <th>Avg R (days)</th>
+                                <th>Avg F</th>
+                                <th>Avg M (BRL)</th>
+                                <th>GMV share</th>
+                                <th>Silhouette</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td colspan="8" class="muted">Loading…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="insight-grid" style="margin-top: 28px">
+                <div class="insight-card">
+                    <h4>Method</h4>
+                    <p>RFM from <code>fact_order</code> (delivered) → <code>log1p(F/M)</code> + RobustScaler → K-Means (k by max silhouette).</p>
+                </div>
+                <div class="insight-card">
+                    <h4>Why RFM first?</h4>
+                    <p>Unsupervised, low leak risk, strong business labels — ideal first ML case study on the warehouse.</p>
+                </div>
+                <div class="insight-card">
+                    <h4>Next (phase 2)</h4>
+                    <p>Late-delivery classification (supervised) using order / geo / seller features without post-delivery leakage.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- ===== ARCHITECTURE ===== -->
     <section id="architecture" class="architecture">
         <div class="container">
@@ -327,6 +523,7 @@
     </script>
     <!-- Data first (no fetch required), then app. js/ path is reliable on GitHub Pages -->
     <script src="js/dashboard-data.js"></script>
+    <script src="js/ml_results.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

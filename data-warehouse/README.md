@@ -11,7 +11,12 @@ python -m pip install -r requirements.txt
 
 # Full load → output/olist_dw.duckdb + ../assets/data/dashboard.json
 python -m pipeline.run
+
+# RFM customer segmentation (ML) → js/ml_results.json
+python -m ml.run_ml
 ```
+
+See [ml/README.md](./ml/README.md) for RFM details.
 
 Expected runtime: ~30–90s depending on disk (geolocation ~1M rows).
 

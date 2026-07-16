@@ -686,12 +686,488 @@ async function loadDashboardData() {
     throw lastErr || new Error("No data source");
 }
 
+async function loadMlData() {
+    if (window.__OLIST_ML__ && window.__OLIST_ML__.rfm_segmentation) {
+        return window.__OLIST_ML__;
+    }
+    const urls = ["js/ml_results.json", "/js/ml_results.json", "assets/data/ml_results.json"];
+    let lastErr = null;
+    for (let i = 0; i < urls.length; i++) {
+        try {
+            const res = await fetch(urls[i], { cache: "no-store" });
+            if (!res.ok) throw new Error("HTTP " + res.status);
+            return await res.json();
+        } catch (err) {
+            lastErr = err;
+        }
+    }
+    throw lastErr || new Error("No ML data");
+}
+
 function paintDashboard(data) {
     applyKpis(data.kpi || {});
     setHeroMeta(data);
     setFooter(data.meta || {});
     renderTableStats(data.table_stats || []);
     renderCharts(data);
+}
+
+function paintMl(payload) {
+    const rfm = payload.rfm_segmentation;
+    if (!rfm) return;
+
+    const evalFinal = (rfm.evaluation && rfm.evaluation.final) || {
+        silhouette: rfm.silhouette,
+        davies_bouldin: rfm.davies_bouldin,
+        calinski_harabasz: rfm.calinski_harabasz,
+        inertia: rfm.inertia,
+        k: rfm.k,
+    };
+
+    const elC = document.getElementById("mlCustomers");
+    const elK = document.getElementById("mlK");
+    const elS = document.getElementById("mlSilhouette");
+    const elDbi = document.getElementById("mlDbi");
+    const elChi = document.getElementById("mlChi");
+    const elIn = document.getElementById("mlInertia");
+    if (elC) elC.textContent = Number(rfm.n_customers).toLocaleString("en-US");
+    if (elK) elK.textContent = String(rfm.k);
+    if (elS) elS.textContent = Number(evalFinal.silhouette ?? rfm.silhouette).toFixed(3);
+    if (elDbi && evalFinal.davies_bouldin != null)
+        elDbi.textContent = Number(evalFinal.davies_bouldin).toFixed(3);
+    if (elChi && evalFinal.calinski_harabasz != null)
+        elChi.textContent = Number(evalFinal.calinski_harabasz).toLocaleString("en-US", {
+            maximumFractionDigits: 0,
+        });
+    if (elIn && evalFinal.inertia != null)
+        elIn.textContent = Number(evalFinal.inertia).toLocaleString("en-US", {
+            maximumFractionDigits: 0,
+        });
+
+    // Evaluation metrics table
+    const evalBody = document.querySelector("#mlEvalTable tbody");
+    if (evalBody) {
+        const notes = (evalFinal.metric_notes) || {
+            silhouette: "[-1, 1] higher better — separation vs cohesion",
+            davies_bouldin: "≥0 lower better — avg similarity of clusters",
+            calinski_harabasz: "higher better — between/within dispersion",
+            inertia: "SSE to centroids — lower better; use elbow vs k",
+        };
+        const rows = [
+            ["Silhouette", evalFinal.silhouette, "↑ higher better", notes.silhouette],
+            ["Davies–Bouldin", evalFinal.davies_bouldin, "↓ lower better", notes.davies_bouldin],
+            ["Calinski–Harabasz", evalFinal.calinski_harabasz, "↑ higher better", notes.calinski_harabasz],
+            ["Inertia (SSE)", evalFinal.inertia, "↓ lower better", notes.inertia],
+        ];
+        evalBody.innerHTML = rows
+            .map(function (r) {
+                const val =
+                    r[1] == null
+                        ? "—"
+                        : typeof r[1] === "number"
+                          ? r[0].indexOf("Silhouette") === 0 || r[0].indexOf("Davies") === 0
+                              ? Number(r[1]).toFixed(4)
+                              : Number(r[1]).toLocaleString("en-US", { maximumFractionDigits: 1 })
+                          : r[1];
+                return (
+                    "<tr><td>" +
+                    r[0] +
+                    "</td><td>" +
+                    val +
+                    "</td><td>" +
+                    r[2] +
+                    '</td><td style="font-family:var(--font-sans);font-size:0.8rem">' +
+                    r[3] +
+                    "</td></tr>"
+                );
+            })
+            .join("");
+    }
+
+    // Metrics by k table
+    const byK = (rfm.evaluation && rfm.evaluation.by_k) || [];
+    const byKBody = document.querySelector("#mlByKTable tbody");
+    if (byKBody && byK.length) {
+        byKBody.innerHTML = byK
+            .map(function (row) {
+                const sel = Number(row.k) === Number(rfm.k);
+                return (
+                    '<tr class="' +
+                    (sel ? "selected-k" : "") +
+                    '"><td>' +
+                    row.k +
+                    "</td><td>" +
+                    Number(row.silhouette).toFixed(4) +
+                    "</td><td>" +
+                    Number(row.davies_bouldin).toFixed(4) +
+                    "</td><td>" +
+                    Number(row.calinski_harabasz).toLocaleString("en-US", { maximumFractionDigits: 1 }) +
+                    "</td><td>" +
+                    Number(row.inertia).toLocaleString("en-US", { maximumFractionDigits: 0 }) +
+                    "</td><td>" +
+                    (sel ? "✓" : "") +
+                    "</td></tr>"
+                );
+            })
+            .join("");
+    }
+
+    const segs = rfm.segments || [];
+    const tbody = document.querySelector("#mlSegmentTable tbody");
+    if (tbody && segs.length) {
+        tbody.innerHTML = segs
+            .map(function (s) {
+                const sil =
+                    s.silhouette_mean == null ? "—" : Number(s.silhouette_mean).toFixed(3);
+                return (
+                    "<tr>" +
+                    "<td>" +
+                    s.segment +
+                    "</td>" +
+                    "<td>" +
+                    Number(s.size).toLocaleString() +
+                    "</td>" +
+                    "<td>" +
+                    s.pct +
+                    "%</td>" +
+                    "<td>" +
+                    s.recency_mean +
+                    "</td>" +
+                    "<td>" +
+                    s.frequency_mean +
+                    "</td>" +
+                    "<td>" +
+                    Number(s.monetary_mean).toLocaleString() +
+                    "</td>" +
+                    "<td>" +
+                    s.gmv_share_pct +
+                    "%</td>" +
+                    "<td>" +
+                    sil +
+                    "</td>" +
+                    "</tr>"
+                );
+            })
+            .join("");
+    }
+
+    if (!chartAvailable()) return;
+
+    // Silhouette vs k + Elbow
+    if (byK.length) {
+        const ks = byK.map(function (r) {
+            return "k=" + r.k;
+        });
+        const silCtx = document.getElementById("mlSilhouetteByKChart");
+        if (silCtx) {
+            new Chart(silCtx, {
+                type: "line",
+                data: {
+                    labels: ks,
+                    datasets: [
+                        {
+                            label: "Silhouette",
+                            data: byK.map(function (r) {
+                                return r.silhouette;
+                            }),
+                            borderColor: COLORS.green,
+                            backgroundColor: "rgba(81, 207, 102, 0.12)",
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            borderWidth: 2.5,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: Object.assign({}, TOOLTIP),
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        y: {
+                            grid: { color: "rgba(255,255,255,0.04)" },
+                            ticks: { font: { size: 10 } },
+                        },
+                    },
+                },
+            });
+        }
+        const elbowCtx = document.getElementById("mlElbowChart");
+        if (elbowCtx) {
+            new Chart(elbowCtx, {
+                type: "line",
+                data: {
+                    labels: ks,
+                    datasets: [
+                        {
+                            label: "Inertia (SSE)",
+                            data: byK.map(function (r) {
+                                return r.inertia;
+                            }),
+                            borderColor: COLORS.pink,
+                            backgroundColor: "rgba(236, 72, 153, 0.1)",
+                            fill: true,
+                            tension: 0.3,
+                            pointRadius: 5,
+                            borderWidth: 2.5,
+                        },
+                    ],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 1.5,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: Object.assign({}, TOOLTIP),
+                    },
+                    scales: {
+                        x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                        y: {
+                            beginAtZero: false,
+                            grid: { color: "rgba(255,255,255,0.04)" },
+                            ticks: {
+                                font: { size: 10 },
+                                callback: function (v) {
+                                    return fmtCompact(v);
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+        }
+    }
+
+    const labels = segs.map(function (s) {
+        return s.segment;
+    });
+    const colors = COLORS.palette.slice(0, segs.length);
+
+    const sizeCtx = document.getElementById("mlSegmentSizeChart");
+    if (sizeCtx && segs.length) {
+        new Chart(sizeCtx, {
+            type: "doughnut",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        data: segs.map(function (s) {
+                            return s.size;
+                        }),
+                        backgroundColor: colors,
+                        borderColor: "transparent",
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.4,
+                cutout: "58%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 } },
+                    },
+                    tooltip: Object.assign({}, TOOLTIP),
+                },
+            },
+        });
+    }
+
+    const gmvCtx = document.getElementById("mlGmvShareChart");
+    if (gmvCtx && segs.length) {
+        new Chart(gmvCtx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "GMV share %",
+                        data: segs.map(function (s) {
+                            return s.gmv_share_pct;
+                        }),
+                        backgroundColor: colors.map(function (c) {
+                            return c + "cc";
+                        }),
+                        borderRadius: 4,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 1.4,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: Object.assign({}, TOOLTIP, {
+                        callbacks: {
+                            label: function (ctx) {
+                                return ctx.parsed.y + "% of GMV";
+                            },
+                        },
+                    }),
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 }, maxRotation: 30 },
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: "rgba(255,255,255,0.04)" },
+                        ticks: {
+                            font: { size: 10 },
+                            callback: function (v) {
+                                return v + "%";
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
+
+    const profCtx = document.getElementById("mlRfmProfileChart");
+    if (profCtx && segs.length) {
+        new Chart(profCtx, {
+            type: "bar",
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Avg Recency (days)",
+                        data: segs.map(function (s) {
+                            return s.recency_mean;
+                        }),
+                        backgroundColor: "rgba(0, 212, 255, 0.65)",
+                        borderRadius: 4,
+                    },
+                    {
+                        label: "Avg Frequency",
+                        data: segs.map(function (s) {
+                            return s.frequency_mean;
+                        }),
+                        backgroundColor: "rgba(139, 92, 246, 0.65)",
+                        borderRadius: 4,
+                    },
+                    {
+                        label: "Avg Monetary (BRL / 10)",
+                        data: segs.map(function (s) {
+                            return Math.round(s.monetary_mean / 10);
+                        }),
+                        backgroundColor: "rgba(81, 207, 102, 0.65)",
+                        borderRadius: 4,
+                    },
+                ],
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.2,
+                plugins: {
+                    legend: {
+                        position: "top",
+                        align: "start",
+                        labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 } },
+                    },
+                    tooltip: Object.assign({}, TOOLTIP),
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: "rgba(255,255,255,0.04)" },
+                        ticks: { font: { size: 10 } },
+                    },
+                },
+            },
+        });
+    }
+
+    const scatter = rfm.scatter_sample || [];
+    const scCtx = document.getElementById("mlScatterChart");
+    if (scCtx && scatter.length && chartAvailable()) {
+        const bySeg = {};
+        scatter.forEach(function (p) {
+            if (!bySeg[p.segment]) bySeg[p.segment] = [];
+            bySeg[p.segment].push({ x: p.r, y: p.m });
+        });
+        const segNames = Object.keys(bySeg);
+        new Chart(scCtx, {
+            type: "scatter",
+            data: {
+                datasets: segNames.map(function (name, i) {
+                    return {
+                        label: name,
+                        data: bySeg[name],
+                        backgroundColor: (COLORS.palette[i % COLORS.palette.length] || "#00d4ff") + "99",
+                        pointRadius: 3,
+                        pointHoverRadius: 5,
+                    };
+                }),
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                aspectRatio: 2.4,
+                plugins: {
+                    legend: {
+                        position: "top",
+                        align: "start",
+                        labels: { usePointStyle: true, boxWidth: 10, font: { size: 11 } },
+                    },
+                    tooltip: Object.assign({}, TOOLTIP, {
+                        callbacks: {
+                            label: function (ctx) {
+                                return (
+                                    ctx.dataset.label +
+                                    ": R=" +
+                                    ctx.parsed.x +
+                                    "d, M=" +
+                                    fmtMoneyBRL(ctx.parsed.y)
+                                );
+                            },
+                        },
+                    }),
+                },
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: "Recency (days since last order)",
+                            color: "#64748b",
+                            font: { size: 11 },
+                        },
+                        grid: { color: "rgba(255,255,255,0.04)" },
+                        ticks: { font: { size: 10 } },
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: "Monetary (BRL)",
+                            color: "#64748b",
+                            font: { size: 11 },
+                        },
+                        beginAtZero: true,
+                        grid: { color: "rgba(255,255,255,0.04)" },
+                        ticks: {
+                            font: { size: 10 },
+                            callback: function (v) {
+                                return fmtCompact(v);
+                            },
+                        },
+                    },
+                },
+            },
+        });
+    }
 }
 
 async function init() {
@@ -704,6 +1180,15 @@ async function init() {
         if (box) box.hidden = false;
         const meta = document.getElementById("heroMeta");
         if (meta) meta.textContent = "Dashboard data unavailable — hard refresh (Ctrl+F5)";
+    }
+
+    try {
+        const ml = await loadMlData();
+        paintMl(ml);
+    } catch (err) {
+        console.error("ML load failed:", err);
+        const box = document.getElementById("mlLoadError");
+        if (box) box.hidden = false;
     }
 }
 

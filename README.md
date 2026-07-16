@@ -12,18 +12,20 @@ GitHub Pages: `https://hqvinh2210-stack.github.io/` (after push + Pages enabled)
 - **Architecture** — Bronze → Gold → JSON web export
 - **Data** — `assets/data/dashboard.json` (generated from DuckDB gold layer)
 
-## Rebuild data + dashboard JSON
+## Rebuild data + dashboard JSON + RFM ML
 
 ```powershell
 cd data-warehouse
 python -m pip install -r requirements.txt
 python -m pipeline.run
+python -m ml.run_ml
 ```
 
 Outputs:
 
 - `data-warehouse/output/olist_dw.duckdb` — full warehouse (local; large)
-- `assets/data/dashboard.json` — aggregates for the website (commit this)
+- `assets/data/dashboard.json` / `js/dashboard-data.js` — BI aggregates (commit)
+- `js/ml_results.json` — RFM segments for the ML section (commit)
 
 ## Local preview
 
