@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vietnam Real Estate Market Analysis</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+    <!-- ===== HERO SECTION ===== -->
+    <header class="hero">
+        <div class="hero-overlay"></div>
+        <!-- Animated background particles -->
+        <div class="hero-bg">
+            <div class="particle p1"></div>
+            <div class="particle p2"></div>
+            <div class="particle p3"></div>
+            <div class="particle p4"></div>
+            <div class="particle p5"></div>
+        </div>
+
+        <div class="hero-content">
+            <!-- Badge -->
+            <div class="hero-badge">
+                <i class="fa-solid fa-chart-line"></i>
+                Data Analyst Portfolio
+            </div>
+
+            <!-- Main heading -->
+            <h1 class="hero-title">
+                Vietnam Real Estate<br />
+                <span class="highlight">Market Analysis</span>
+            </h1>
+
+            <!-- Subtitle -->
+            <p class="hero-subtitle">
+                <i class="fa-solid fa-code"></i> Data Analyst Case Study
+            </p>
+
+            <!-- Tech stack pills -->
+            <div class="hero-tags">
+                <span class="tag"><i class="fa-brands fa-python"></i> Python</span>
+                <span class="tag"><i class="fa-solid fa-database"></i> SQL</span>
+                <span class="tag"><i class="fa-solid fa-chart-simple"></i> Power BI</span>
+                <span class="tag"><i class="fa-solid fa-wind"></i> Airflow</span>
+            </div>
+
+            <!-- CTA -->
+            <div class="hero-actions">
+                <a href="#dashboard" class="btn btn-primary">
+                    <i class="fa-solid fa-gauge-high"></i> View Dashboard
+                </a>
+                <a href="#analysis" class="btn btn-outline">
+                    <i class="fa-solid fa-file-lines"></i> Full Analysis
+                </a>
+            </div>
+
+            <!-- Scroll indicator -->
+            <div class="scroll-indicator">
+                <span>Scroll to explore</span>
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ===== DASHBOARD SECTION ===== -->
+    <section id="dashboard" class="dashboard">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-badge">Dashboard</span>
+                <h2>Market Overview</h2>
+                <p>Key metrics and trends across Vietnam's real estate market</p>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #00d4ff">
+                        <i class="fa-solid fa-city"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" data-target="1245">0</span>
+                        <span class="kpi-unit">Projects</span>
+                    </div>
+                    <span class="kpi-label">Nationwide Active Projects</span>
+                    <div class="kpi-trend up">
+                        <i class="fa-solid fa-arrow-up"></i> 12.3% vs last quarter
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #ff6b6b">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" data-target="32.5">0</span>
+                        <span class="kpi-unit">M VND/m²</span>
+                    </div>
+                    <span class="kpi-label">Average Price (All Segments)</span>
+                    <div class="kpi-trend up">
+                        <i class="fa-solid fa-arrow-up"></i> 8.7% vs last quarter
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #51cf66">
+                        <i class="fa-solid fa-building"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" data-target="847">0</span>
+                        <span class="kpi-unit">Units</span>
+                    </div>
+                    <span class="kpi-label">New Supply (This Quarter)</span>
+                    <div class="kpi-trend down">
+                        <i class="fa-solid fa-arrow-down"></i> 5.2% vs last quarter
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon" style="--kpi-color: #fcc419">
+                        <i class="fa-solid fa-handshake"></i>
+                    </div>
+                    <div class="kpi-info">
+                        <span class="kpi-value" data-target="68.2">0</span>
+                        <span class="kpi-unit">%</span>
+                    </div>
+                    <span class="kpi-label">Absorption Rate</span>
+                    <div class="kpi-trend up">
+                        <i class="fa-solid fa-arrow-up"></i> 3.1% vs last quarter
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <!-- Price Trend -->
+                <div class="chart-card" id="analysis">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-line"></i> Price Trend (VND/m²)</h3>
+                        <span class="chart-period">2021 – 2025</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="priceTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Supply by Segment -->
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-pie"></i> Supply by Segment</h3>
+                        <span class="chart-period">2024</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="segmentChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Regional Comparison -->
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-chart-bar"></i> Regional Price Comparison</h3>
+                        <span class="chart-period">By City / Province</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="regionalChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Transactions -->
+                <div class="chart-card full-width">
+                    <div class="chart-header">
+                        <h3><i class="fa-solid fa-calendar-check"></i> Monthly Transactions (2024)</h3>
+                        <span class="chart-period">Volume & Value</span>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="transactionsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Vietnam Real Estate Analysis</span>
+                </div>
+                <p class="footer-text">Built with <i class="fa-solid fa-heart" style="color: #ff6b6b"></i> for data storytelling</p>
+                <div class="footer-links">
+                    <a href="#" class="footer-link"><i class="fa-brands fa-github"></i></a>
+                    <a href="#" class="footer-link"><i class="fa-brands fa-linkedin"></i></a>
+                    <a href="#" class="footer-link"><i class="fa-solid fa-envelope"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Custom JS -->
+    <script src="js/main.js"></script>
+</body>
+</html>
