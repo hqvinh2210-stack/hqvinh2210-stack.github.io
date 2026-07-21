@@ -1,18 +1,46 @@
-# Olist E-Commerce Data Warehouse Portfolio
+# Vinh HQ — Data Analyst Portfolio
 
-Static GitHub Pages site showcasing a **Kimball star-schema data warehouse** built from the Brazilian Olist e-commerce dataset.
+React + Vite portfolio with an Olist e-commerce data warehouse case study.
 
 ## Live site
 
-GitHub Pages: `https://hqvinh2210-stack.github.io/` (after push + Pages enabled)
+https://hqvinh2210-stack.github.io/
 
-## What you see
+## Why deploy was broken
 
-- **Dashboard** — GMV, orders, categories, payments, regions, reviews, delivery SLA (Chart.js)
-- **Architecture** — Bronze → Gold → JSON web export
-- **Data** — `assets/data/dashboard.json` (generated from DuckDB gold layer)
+GitHub Pages was serving the **source** `index.html`, which loads `/src/main.jsx`. Browsers cannot run JSX and reject the wrong MIME type (`text/jsx`). The app must be **built** with Vite first; only the `dist/` output should be published.
 
-## Rebuild data + dashboard JSON + RFM ML
+## Local development
+
+```powershell
+cd C:\Users\admin\Downloads\hqvinh2210-stack.github.io
+npm.cmd install
+npm.cmd run dev
+```
+
+Open the URL Vite prints (usually http://localhost:5173).
+
+## Production build (local check)
+
+```powershell
+npm.cmd run build
+npm.cmd run preview
+```
+
+`build` writes optimized JS/CSS into `dist/` and copies `index.html` → `404.html` for SPA deep links.
+
+## Deploy (GitHub Pages)
+
+Deployment is automated by [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml):
+
+1. Push to `main` (or run the workflow manually under **Actions**).
+2. One-time setup on GitHub:
+   - **Settings → Pages → Build and deployment → Source: GitHub Actions**
+3. After the workflow succeeds, the site is live at the URL above.
+
+Do **not** point Pages at the repo root on `main` — that serves raw JSX and causes the MIME error.
+
+## Data warehouse rebuild (optional)
 
 ```powershell
 cd data-warehouse
@@ -21,20 +49,7 @@ python -m pipeline.run
 python -m ml.run_ml
 ```
 
-Outputs:
-
-- `data-warehouse/output/olist_dw.duckdb` — full warehouse (local; large)
-- `assets/data/dashboard.json` / `js/dashboard-data.js` — BI aggregates (commit)
-- `js/ml_results.json` — RFM segments for the ML section (commit)
-
-## Local preview
-
-```powershell
-cd C:\Users\admin\Downloads\hqvinh2210-stack.github.io
-python -m http.server 8080
-```
-
-Open http://localhost:8080
+Outputs used by the site live under `public/assets/data/` (copied into `dist` on build).
 
 ## Docs
 
