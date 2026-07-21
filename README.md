@@ -1,4 +1,4 @@
-# Vinh HQ — Data Analyst Portfolio
+# HA QUANG VINH — Data Analyst Portfolio
 
 React + Vite portfolio with an Olist e-commerce data warehouse case study.
 
