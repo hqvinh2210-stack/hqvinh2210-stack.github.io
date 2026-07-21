@@ -1,11 +1,21 @@
 import { motion, useReducedMotion } from "motion/react";
 
-export default function Reveal({ children, className = "", delay = 0, as: Tag = "div" }) {
+export default function Reveal({
+  children,
+  className = "",
+  delay = 0,
+  as: Tag = "div",
+  ...rest
+}) {
   const reduce = useReducedMotion();
   const MotionTag = motion.create(Tag);
 
   if (reduce) {
-    return <Tag className={className}>{children}</Tag>;
+    return (
+      <Tag className={className} {...rest}>
+        {children}
+      </Tag>
+    );
   }
 
   return (
@@ -19,6 +29,7 @@ export default function Reveal({ children, className = "", delay = 0, as: Tag = 
         delay,
         ease: [0.16, 1, 0.3, 1],
       }}
+      {...rest}
     >
       {children}
     </MotionTag>
