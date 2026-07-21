@@ -1,12 +1,12 @@
 export const profile = {
-  name: "Vinh HQ",
+  name: "HA QUANG VINH",
   title: "Data Analyst",
   location: "Vietnam · Remote-friendly",
   email: "hqvinh2210@gmail.com",
   github: "https://github.com/hqvinh2210-stack",
   linkedin: "https://www.linkedin.com/in/",
   valueProp:
-    "I turn messy operational data into clear decisions — problem, analysis, insight, and quantified impact.",
+    "I turn messy operational data into clear decisions: problem, analysis, insight, and quantified impact.",
   bio: "Data analyst focused on e-commerce and operational analytics. I build end-to-end pipelines (CSV to star schema), exploratory models (RFM / clustering), and dashboards that product and ops teams can actually use. Comfortable moving between SQL, Python, and BI tools without losing the business question.",
 };
 
