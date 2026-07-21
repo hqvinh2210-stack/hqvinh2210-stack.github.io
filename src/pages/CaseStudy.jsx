@@ -598,10 +598,30 @@ export default function CaseStudy() {
                 via {cs.clustering.selectionRule}.
               </p>
 
+              {(() => {
+                const champs = segments.find((s) => s.segment === "Champions");
+                if (!champs) return null;
+                return (
+                  <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-navy">
+                    <span className="font-semibold">Business read: </span>
+                    Champions are about{" "}
+                    <span className="font-mono font-semibold text-primary">
+                      {champs.pct}%
+                    </span>{" "}
+                    of customers but drive about{" "}
+                    <span className="font-mono font-semibold text-primary">
+                      {champs.gmv_share_pct}%
+                    </span>{" "}
+                    of GMV. A small high-value cohort carries most revenue; CRM
+                    should protect them first, then win back At Risk.
+                  </div>
+                );
+              })()}
+
               <div className="mt-6">
                 <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                   <h3 className="text-sm font-semibold text-navy">
-                    3D cluster scatter (RFM sample)
+                    Cluster scatter (RFM sample)
                   </h3>
                   <span className="font-mono text-[11px] text-muted">
                     {scatter.length.toLocaleString()} points from gold RFM extract
@@ -614,6 +634,11 @@ export default function CaseStudy() {
                     Loading cluster sample…
                   </div>
                 )}
+                <p className="mt-2 text-xs text-muted">
+                  Prefer 2D if motion is reduced or the device is slow. 3D adds
+                  frequency as depth; 2D keeps Recency × Monetary for a flat
+                  CRM view.
+                </p>
               </div>
 
               <h3 className="mt-10 text-sm font-semibold text-navy">

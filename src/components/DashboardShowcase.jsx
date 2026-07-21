@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   ResponsiveContainer,
   AreaChart,
@@ -38,6 +39,15 @@ function ChartTip({ active, payload, label }) {
   );
 }
 
+function Insight({ children }) {
+  return (
+    <p className="mt-3 border-t border-line pt-3 text-xs leading-relaxed text-muted md:text-sm">
+      <span className="font-semibold text-navy">Insight: </span>
+      {children}
+    </p>
+  );
+}
+
 export default function DashboardShowcase() {
   const [dash, setDash] = useState(null);
   const [err, setErr] = useState(false);
@@ -68,18 +78,66 @@ export default function DashboardShowcase() {
 
   const kpi = dash?.kpi;
 
+  const insights = useMemo(() => {
+    const series = dash?.sales_monthly || [];
+    let gmvInsight =
+      "Monthly GMV shows the growth ramp through 2017-2018 that finance should plan capacity around.";
+    if (series.length >= 2) {
+      const last = series[series.length - 1];
+      const prev = series[series.length - 2];
+      if (prev?.gmv > 0) {
+        const pct = (((last.gmv - prev.gmv) / prev.gmv) * 100).toFixed(0);
+        const dir = last.gmv >= prev.gmv ? "up" : "down";
+        gmvInsight = `Latest month ${last.year_month}: GMV ${formatMoney(last.gmv)}, ${dir} ${Math.abs(pct)}% vs prior month. Seasonality and ramp both matter for ops planning.`;
+      }
+    }
+
+    let ordersInsight =
+      "Order volume tracks GMV closely; spikes flag campaign or marketplace events worth root-causing.";
+    if (series.length) {
+      const peak = series.reduce((a, b) => (b.orders > a.orders ? b : a), series[0]);
+      ordersInsight = `Peak orders in this window: ${peak.orders.toLocaleString()} in ${peak.year_month}. Volume spikes are the first place to check delivery SLA load.`;
+    }
+
+    let payInsight =
+      "Payment mix shapes cash timing (card vs boleto) and installment risk.";
+    if (payments.length) {
+      const total = payments.reduce((s, p) => s + (p.value || 0), 0) || 1;
+      const top = [...payments].sort((a, b) => b.value - a.value)[0];
+      const share = ((top.value / total) * 100).toFixed(0);
+      payInsight = `${top.name} leads payment mix (~${share}% of top types shown). Cash-cycle and installment policies should follow this mix, not a flat average.`;
+    }
+
+    let kpiInsight = null;
+    if (kpi) {
+      kpiInsight = `Delivered grain locks GMV at ${formatMoney(kpi.total_gmv)} with ${kpi.on_time_rate_pct}% on-time and only ${kpi.repeat_customer_pct}% repeat buyers. Reliability is strong; retention is the open lever.`;
+    }
+
+    return { gmvInsight, ordersInsight, payInsight, kpiInsight };
+  }, [dash, payments, kpi]);
+
   return (
     <section id="dashboards" className="bg-surface py-20 md:py-28">
       <div className="container-page">
         <Reveal>
-          <p className="section-kicker">Dashboard showcase</p>
-          <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-tight text-navy md:text-4xl">
-            Live aggregates from the Olist gold layer
-          </h2>
-          <p className="mt-3 max-w-[56ch] text-muted">
-            Hover tooltips mirror how I present BI packs in Power BI / Tableau —
-            same numbers, transparent definitions.
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="section-kicker">Dashboard showcase</p>
+              <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-tight text-navy md:text-4xl">
+                Live aggregates from the Olist gold layer
+              </h2>
+              <p className="mt-3 max-w-[56ch] text-muted">
+                Same KPI definitions as the warehouse export. Each chart includes
+                a one-line business read, not only a picture.
+              </p>
+            </div>
+            <Link
+              to="/case-study/olist-dw"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
+            >
+              Open full case study
+            </Link>
+          </div>
         </Reveal>
 
         {err && (
@@ -92,19 +150,19 @@ export default function DashboardShowcase() {
           {[
             {
               label: "Delivered orders",
-              value: kpi ? kpi.delivered_orders.toLocaleString() : "—",
+              value: kpi ? kpi.delivered_orders.toLocaleString() : "-",
             },
             {
               label: "Total GMV",
-              value: kpi ? formatMoney(kpi.total_gmv) : "—",
+              value: kpi ? formatMoney(kpi.total_gmv) : "-",
             },
             {
               label: "AOV",
-              value: kpi ? `R$${kpi.aov.toFixed(0)}` : "—",
+              value: kpi ? `R$${kpi.aov.toFixed(0)}` : "-",
             },
             {
               label: "On-time rate",
-              value: kpi ? `${kpi.on_time_rate_pct}%` : "—",
+              value: kpi ? `${kpi.on_time_rate_pct}%` : "-",
             },
           ].map((k, i) => (
             <Reveal key={k.label} delay={i * 0.04}>
@@ -117,6 +175,14 @@ export default function DashboardShowcase() {
             </Reveal>
           ))}
         </div>
+        {insights.kpiInsight && (
+          <Reveal>
+            <p className="mt-3 max-w-[70ch] text-sm text-muted">
+              <span className="font-semibold text-navy">KPI read: </span>
+              {insights.kpiInsight}
+            </p>
+          </Reveal>
+        )}
 
         <div className="mt-6 grid gap-6 lg:grid-cols-5">
           <Reveal className="card p-4 lg:col-span-3 md:p-5" delay={0.05}>
@@ -160,6 +226,7 @@ export default function DashboardShowcase() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            <Insight>{insights.gmvInsight}</Insight>
           </Reveal>
 
           <Reveal className="card p-4 lg:col-span-2 md:p-5" delay={0.1}>
@@ -193,6 +260,7 @@ export default function DashboardShowcase() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            <Insight>{insights.ordersInsight}</Insight>
           </Reveal>
         </div>
 
@@ -224,8 +292,18 @@ export default function DashboardShowcase() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
+            <Insight>{insights.payInsight}</Insight>
           </Reveal>
         )}
+
+        <Reveal className="mt-8 text-center">
+          <Link
+            to="/case-study/olist-dw#findings"
+            className="inline-flex rounded-lg border border-line bg-white px-5 py-2.5 text-sm font-semibold text-navy transition hover:border-primary/30 hover:text-primary"
+          >
+            See findings, EDA, and RFM clustering
+          </Link>
+        </Reveal>
       </div>
     </section>
   );

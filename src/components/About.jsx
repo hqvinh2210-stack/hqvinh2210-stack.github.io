@@ -6,9 +6,16 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from "recharts";
+import { Link } from "react-router-dom";
 import { useReducedMotion } from "motion/react";
 import Reveal from "./Reveal.jsx";
-import { profile, skills, skillRadar } from "../data/portfolio.js";
+import { profile, skillGroups, skillLevels, skillRadar } from "../data/portfolio.js";
+
+const LEVEL_STYLE = {
+  Daily: "bg-primary/10 text-primary border-primary/20",
+  Project: "bg-cyan/10 text-cyan border-cyan/25",
+  Learning: "bg-surface-2 text-muted border-line",
+};
 
 export default function About() {
   const reduce = useReducedMotion();
@@ -37,29 +44,73 @@ export default function About() {
               the evidence, not the goal.
             </p>
 
-            <div className="mt-8 space-y-4">
-              {skills.map((s) => (
-                <div key={s.name}>
-                  <div className="mb-1.5 flex items-center justify-between text-sm">
-                    <span className="font-medium text-navy">{s.name}</span>
-                    <span className="font-mono text-primary">{s.level}</span>
-                  </div>
-                  <div className="h-2 overflow-hidden rounded-full bg-line">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-primary to-cyan transition-all duration-700"
-                      style={{ width: `${s.level}%` }}
-                    />
-                  </div>
-                </div>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {Object.values(skillLevels).map((lv) => (
+                <span
+                  key={lv.label}
+                  className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${LEVEL_STYLE[lv.label]}`}
+                  title={lv.hint}
+                >
+                  {lv.label}
+                </span>
               ))}
+              <span className="self-center text-[11px] text-muted">
+                = usage depth, not a self-scored %
+              </span>
             </div>
+
+            <ul className="mt-6 space-y-3">
+              {skillGroups.map((s) => {
+                const body = (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-semibold text-navy">{s.name}</span>
+                      <span
+                        className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${LEVEL_STYLE[s.level]}`}
+                      >
+                        {s.level}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed text-muted">
+                      {s.evidence}
+                    </p>
+                  </>
+                );
+
+                return (
+                  <li key={s.name}>
+                    {s.href.startsWith("/#") ? (
+                      <a
+                        href={s.href.replace("/#", "#")}
+                        className="block rounded-xl border border-line bg-white px-4 py-3 transition hover:border-primary/30 hover:shadow-card"
+                      >
+                        {body}
+                      </a>
+                    ) : (
+                      <Link
+                        to={s.href}
+                        className="block rounded-xl border border-line bg-white px-4 py-3 transition hover:border-primary/30 hover:shadow-card"
+                      >
+                        {body}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
           </Reveal>
 
           <Reveal delay={0.1} className="card p-5 md:p-6">
-            <div className="mb-2 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-navy">Skill radar</h3>
-              <span className="font-mono text-[11px] text-muted">0–100</span>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <h3 className="text-sm font-semibold text-navy">Skill usage map</h3>
+              <span className="font-mono text-[11px] text-muted">
+                Daily · Project · Learning
+              </span>
             </div>
+            <p className="mb-3 text-xs text-muted">
+              Axis shows how often I use each skill in real work, not a 0-100
+              proficiency score.
+            </p>
             <div className="h-[300px] w-full md:h-[340px]">
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={skillRadar} cx="50%" cy="50%" outerRadius="72%">
@@ -70,12 +121,16 @@ export default function About() {
                   />
                   <PolarRadiusAxis
                     angle={30}
-                    domain={[0, 100]}
-                    tick={{ fill: "#94a3b8", fontSize: 10 }}
+                    domain={[0, 3]}
+                    tickCount={4}
+                    tickFormatter={(v) =>
+                      v === 3 ? "Daily" : v === 2 ? "Project" : v === 1 ? "Learn" : ""
+                    }
+                    tick={{ fill: "#94a3b8", fontSize: 9 }}
                     axisLine={false}
                   />
                   <Radar
-                    name="Skills"
+                    name="Usage"
                     dataKey="value"
                     stroke="#2563EB"
                     fill="#06B6D4"

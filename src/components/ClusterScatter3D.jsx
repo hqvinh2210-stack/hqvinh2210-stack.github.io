@@ -1,4 +1,15 @@
 import { useEffect, useRef, useState, useMemo } from "react";
+import {
+  ResponsiveContainer,
+  ScatterChart,
+  Scatter,
+  XAxis,
+  YAxis,
+  ZAxis,
+  Tooltip,
+  CartesianGrid,
+  Cell,
+} from "recharts";
 
 const SEGMENT_COLORS = {
   Champions: "#2563eb",
@@ -10,9 +21,134 @@ function colorFor(segment) {
   return SEGMENT_COLORS[segment] || "#64748b";
 }
 
+function SegmentLegend({ segments }) {
+  return (
+    <div className="flex flex-wrap gap-2">
+      {segments.map(([name, color]) => (
+        <span
+          key={name}
+          className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/95 px-2 py-1 text-[10px] font-medium text-navy shadow-card"
+        >
+          <span className="h-2 w-2 rounded-full" style={{ background: color }} />
+          {name}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function ScatterTip({ active, payload }) {
+  if (!active || !payload?.length) return null;
+  const p = payload[0]?.payload;
+  if (!p) return null;
+  return (
+    <div className="rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-card">
+      <div className="font-semibold text-navy">{p.segment}</div>
+      <div className="mt-1 font-mono text-[11px] text-muted">
+        R {p.r}d · F {p.f} · M R${Number(p.m).toFixed(0)}
+      </div>
+    </div>
+  );
+}
+
+/** Static 2D Recency × Monetary scatter (accessible fallback). */
+function ClusterScatter2D({ points, height = 420 }) {
+  const data = useMemo(
+    () =>
+      points.map((p) => ({
+        r: p.r,
+        m: p.m,
+        f: p.f,
+        segment: p.segment,
+        cluster_id: p.cluster_id,
+      })),
+    [points]
+  );
+
+  const bySegment = useMemo(() => {
+    const map = new Map();
+    for (const p of data) {
+      if (!map.has(p.segment)) map.set(p.segment, []);
+      map.get(p.segment).push(p);
+    }
+    return map;
+  }, [data]);
+
+  const segments = useMemo(() => {
+    const set = new Map();
+    for (const p of points) {
+      if (!set.has(p.segment)) set.set(p.segment, colorFor(p.segment));
+    }
+    return [...set.entries()];
+  }, [points]);
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-[12px] border border-line bg-surface"
+      style={{ height }}
+    >
+      <div className="absolute left-3 top-3 z-10 rounded-lg border border-line bg-white/90 px-2.5 py-1.5 text-[11px] text-muted shadow-card">
+        2D view · Recency (x) × Monetary (y)
+      </div>
+      <div className="h-full w-full pt-8 pb-12 px-1">
+        <ResponsiveContainer width="100%" height="100%">
+          <ScatterChart margin={{ top: 12, right: 16, bottom: 8, left: 8 }}>
+            <CartesianGrid stroke="#e2e8f0" />
+            <XAxis
+              type="number"
+              dataKey="r"
+              name="Recency"
+              tick={{ fill: "#64748b", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+              label={{
+                value: "Recency (days)",
+                position: "insideBottom",
+                offset: -2,
+                fill: "#94a3b8",
+                fontSize: 10,
+              }}
+            />
+            <YAxis
+              type="number"
+              dataKey="m"
+              name="Monetary"
+              tick={{ fill: "#64748b", fontSize: 10 }}
+              axisLine={false}
+              tickLine={false}
+              width={44}
+              tickFormatter={(v) => (v >= 1000 ? `${Math.round(v / 1000)}k` : v)}
+              label={{
+                value: "Monetary (BRL)",
+                angle: -90,
+                position: "insideLeft",
+                fill: "#94a3b8",
+                fontSize: 10,
+              }}
+            />
+            <ZAxis type="number" dataKey="f" range={[30, 120]} />
+            <Tooltip content={<ScatterTip />} cursor={{ strokeDasharray: "3 3" }} />
+            {[...bySegment.entries()].map(([seg, rows]) => (
+              <Scatter key={seg} name={seg} data={rows} fill={colorFor(seg)}>
+                {rows.map((row, i) => (
+                  <Cell key={`${seg}-${i}`} fill={colorFor(row.segment)} fillOpacity={0.7} />
+                ))}
+              </Scatter>
+            ))}
+          </ScatterChart>
+        </ResponsiveContainer>
+      </div>
+      <div className="absolute bottom-3 left-3">
+        <SegmentLegend segments={segments} />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Lightweight interactive 3D scatter for RFM clusters (R, F, M).
  * Canvas projection with drag-rotate; no Three.js dependency.
+ * Falls back to 2D when prefers-reduced-motion is on (or user toggles).
  */
 export default function ClusterScatter3D({ points = [], height = 420 }) {
   const canvasRef = useRef(null);
@@ -27,6 +163,7 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
   });
   const [hover, setHover] = useState(null);
   const [reduced, setReduced] = useState(false);
+  const [mode, setMode] = useState("auto"); // auto | 3d | 2d
 
   const normalized = useMemo(() => {
     if (!points.length) return [];
@@ -39,9 +176,9 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
       maxM = Math.max(maxM, p.m || 0);
     }
     return points.map((p) => ({
-      x: ((p.r || 0) / maxR) * 2 - 1, // recency
-      y: ((p.m || 0) / maxM) * 2 - 1, // monetary (up)
-      z: ((p.f || 0) / maxF) * 2 - 1, // frequency
+      x: ((p.r || 0) / maxR) * 2 - 1,
+      y: ((p.m || 0) / maxM) * 2 - 1,
+      z: ((p.f || 0) / maxF) * 2 - 1,
       r: p.r,
       f: p.f,
       m: p.m,
@@ -63,7 +200,10 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
     return () => mq.removeEventListener("change", onChange);
   }, []);
 
+  const use2d = mode === "2d" || (mode === "auto" && reduced);
+
   useEffect(() => {
+    if (use2d) return;
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap || !normalized.length) return;
@@ -85,7 +225,6 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
     };
 
     const project = (x, y, z, rotY, rotX, cx, cy, scale) => {
-      // rotate Y then X
       const cosY = Math.cos(rotY);
       const sinY = Math.sin(rotY);
       const cosX = Math.cos(rotX);
@@ -134,7 +273,6 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
       }
 
       ctx.clearRect(0, 0, w, h);
-      // subtle background grid wash
       const grad = ctx.createLinearGradient(0, 0, w, h);
       grad.addColorStop(0, "#f8fafc");
       grad.addColorStop(1, "#eef2ff");
@@ -193,7 +331,6 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
         s.lastX = x;
         s.lastY = y;
       } else {
-        // hover nearest point in screen space
         const rect = canvas.getBoundingClientRect();
         const mx = x - rect.left;
         const my = y - rect.top;
@@ -232,7 +369,7 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
       window.removeEventListener("pointerup", onUp);
       canvas.removeEventListener("pointerleave", onLeave);
     };
-  }, [normalized, height, reduced]);
+  }, [normalized, height, reduced, use2d]);
 
   const segments = useMemo(() => {
     const set = new Map();
@@ -242,33 +379,58 @@ export default function ClusterScatter3D({ points = [], height = 420 }) {
     return [...set.entries()];
   }, [points]);
 
+  const modeBtn = (id, label) => (
+    <button
+      type="button"
+      onClick={() => setMode(id)}
+      className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+        mode === id
+          ? "bg-navy text-white"
+          : "bg-white text-muted hover:text-navy"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div ref={wrapRef} className="relative overflow-hidden rounded-[12px] border border-line">
-      <canvas
-        ref={canvasRef}
-        className="block w-full cursor-grab touch-none active:cursor-grabbing"
-        aria-label="3D RFM cluster scatter plot"
-      />
-      <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-line bg-white/90 px-2.5 py-1.5 text-[11px] text-muted shadow-card backdrop-blur-sm">
-        Drag to rotate · Axes: R / F / M
+    <div>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="inline-flex rounded-lg border border-line bg-surface p-0.5">
+          {modeBtn("auto", reduced ? "Auto (2D)" : "Auto (3D)")}
+          {modeBtn("3d", "3D")}
+          {modeBtn("2d", "2D")}
+        </div>
+        <span className="text-[11px] text-muted">
+          {use2d
+            ? "2D fallback: Recency × Monetary"
+            : "Drag to rotate · Axes R / F / M"}
+        </span>
       </div>
-      <div className="absolute bottom-3 left-3 flex flex-wrap gap-2">
-        {segments.map(([name, color]) => (
-          <span
-            key={name}
-            className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white/95 px-2 py-1 text-[10px] font-medium text-navy shadow-card"
-          >
-            <span className="h-2 w-2 rounded-full" style={{ background: color }} />
-            {name}
-          </span>
-        ))}
-      </div>
-      {hover && (
-        <div className="pointer-events-none absolute right-3 top-3 max-w-[200px] rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-card">
-          <div className="font-semibold text-navy">{hover.segment}</div>
-          <div className="mt-1 font-mono text-[11px] text-muted">
-            R {hover.r}d · F {hover.f} · M R${Number(hover.m).toFixed(0)}
+
+      {use2d ? (
+        <ClusterScatter2D points={points} height={height} />
+      ) : (
+        <div ref={wrapRef} className="relative overflow-hidden rounded-[12px] border border-line">
+          <canvas
+            ref={canvasRef}
+            className="block w-full cursor-grab touch-none active:cursor-grabbing"
+            aria-label="3D RFM cluster scatter plot"
+          />
+          <div className="pointer-events-none absolute left-3 top-3 rounded-lg border border-line bg-white/90 px-2.5 py-1.5 text-[11px] text-muted shadow-card backdrop-blur-sm">
+            Drag to rotate · Axes: R / F / M
           </div>
+          <div className="absolute bottom-3 left-3">
+            <SegmentLegend segments={segments} />
+          </div>
+          {hover && (
+            <div className="pointer-events-none absolute right-3 top-3 max-w-[200px] rounded-lg border border-line bg-white px-3 py-2 text-xs shadow-card">
+              <div className="font-semibold text-navy">{hover.segment}</div>
+              <div className="mt-1 font-mono text-[11px] text-muted">
+                R {hover.r}d · F {hover.f} · M R${Number(hover.m).toFixed(0)}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

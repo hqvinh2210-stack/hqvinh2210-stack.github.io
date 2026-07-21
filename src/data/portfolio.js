@@ -10,23 +10,67 @@ export const profile = {
   bio: "Data analyst focused on e-commerce and operational analytics. I build end-to-end pipelines (CSV to star schema), exploratory models (RFM / clustering), and dashboards that product and ops teams can actually use. Comfortable moving between SQL, Python, and BI tools without losing the business question.",
 };
 
-export const skills = [
-  { name: "SQL", level: 92 },
-  { name: "Python", level: 88 },
-  { name: "Power BI / Tableau", level: 84 },
-  { name: "Excel", level: 86 },
-  { name: "Statistics", level: 80 },
-  { name: "Data Modeling", level: 90 },
+/** Usage depth (not self-scored %). Daily > Project > Learning. */
+export const skillLevels = {
+  Daily: {
+    label: "Daily",
+    hint: "Used on real pipelines and analysis this year",
+  },
+  Project: {
+    label: "Project",
+    hint: "Shipped in portfolio / applied case work",
+  },
+  Learning: {
+    label: "Learning",
+    hint: "Building depth through labs and side work",
+  },
+};
+
+export const skillGroups = [
+  {
+    name: "SQL",
+    level: "Daily",
+    evidence: "Star-schema facts/dims, quality checks, RFM extract on DuckDB",
+    href: "/case-study/olist-dw#warehouse",
+  },
+  {
+    name: "Python",
+    level: "Daily",
+    evidence: "Medallion pipeline, scikit-learn RFM + cluster evaluation",
+    href: "/case-study/olist-dw#clustering",
+  },
+  {
+    name: "Data Modeling",
+    level: "Project",
+    evidence: "Kimball grain docs, surrogate keys, Unknown sk = -1 pattern",
+    href: "/case-study/olist-dw#warehouse",
+  },
+  {
+    name: "BI / Charts",
+    level: "Project",
+    evidence: "Gold JSON marts, KPI packs, portfolio dashboard showcase",
+    href: "/#dashboards",
+  },
+  {
+    name: "Statistics / ML",
+    level: "Project",
+    evidence: "Silhouette, Davies-Bouldin, Calinski-Harabasz, k selection",
+    href: "/case-study/olist-dw#clustering",
+  },
+  {
+    name: "Excel",
+    level: "Daily",
+    evidence: "Stakeholder tables, quick reconciliation against warehouse KPIs",
+    href: "/case-study/olist-dw#eda",
+  },
 ];
 
-export const skillRadar = [
-  { skill: "SQL", value: 92 },
-  { skill: "Python", value: 88 },
-  { skill: "BI Tools", value: 84 },
-  { skill: "Excel", value: 86 },
-  { skill: "Stats", value: 80 },
-  { skill: "Modeling", value: 90 },
-];
+/** Radar uses ordinal usage depth only (not proficiency %). */
+export const skillRadar = skillGroups.map((s) => ({
+  skill: s.name.split(" / ")[0].split(" ")[0],
+  value: s.level === "Daily" ? 3 : s.level === "Project" ? 2 : 1,
+  level: s.level,
+}));
 
 export const projects = [
   {
