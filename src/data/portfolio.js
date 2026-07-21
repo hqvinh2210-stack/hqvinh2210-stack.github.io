@@ -102,21 +102,6 @@ export const experience = [
   },
 ];
 
-export const testimonials = [
-  {
-    quote:
-      "Vinh does not stop at charts. He frames the business question first, then makes the numbers decision-ready.",
-    name: "Minh Tran",
-    role: "Operations Lead",
-  },
-  {
-    quote:
-      "Clear pipeline thinking — bronze to gold to dashboard — and he can explain trade-offs to non-technical partners.",
-    name: "Lan Pham",
-    role: "Product Manager",
-  },
-];
-
 export const caseStudy = {
   slug: "olist-dw",
   title: "Olist Brazilian E-Commerce Data Warehouse",

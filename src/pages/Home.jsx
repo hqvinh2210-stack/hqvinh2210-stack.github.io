@@ -4,7 +4,6 @@ import About from "../components/About.jsx";
 import Projects from "../components/Projects.jsx";
 import DashboardShowcase from "../components/DashboardShowcase.jsx";
 import Experience from "../components/Experience.jsx";
-import Testimonials from "../components/Testimonials.jsx";
 import Contact from "../components/Contact.jsx";
 import Footer from "../components/Footer.jsx";
 
@@ -18,7 +17,6 @@ export default function Home() {
         <Projects />
         <DashboardShowcase />
         <Experience />
-        <Testimonials />
         <Contact />
       </main>
       <Footer />
