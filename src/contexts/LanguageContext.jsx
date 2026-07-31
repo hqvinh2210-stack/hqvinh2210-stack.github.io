@@ -60,7 +60,28 @@ const translations = {
       heading: "Problem → analysis → insight → impact",
       description:
         "Each card highlights the business question and the numbers that changed how stakeholders saw the system.",
+      problemLabel: "Problem:",
       link: "Open case study",
+      items: {
+        "olist-dw": {
+          title: "Olist E-Commerce Data Warehouse",
+          problem:
+            "Fragmented CSVs made it hard to trust GMV, delivery SLA, and category performance across 2 years of orders.",
+          metrics: ["Delivered orders", "On-time rate"],
+        },
+        "rfm-segments": {
+          title: "RFM Customer Segmentation",
+          problem:
+            "Marketing needed a durable customer grouping beyond one-off spreadsheets: who is loyal, who is at risk, who is high-value.",
+          metrics: ["Customers scored", "Silhouette (k=3)"],
+        },
+        "ops-sla": {
+          title: "Delivery SLA Insight Layer",
+          problem:
+            "Late deliveries were discussed anecdotally. Ops needed a single definition of on-time and a path to root causes by region.",
+          metrics: ["On-time deliveries", "Avg review score"],
+        },
+      },
     },
     dashboard: {
       kicker: "Dashboard showcase",
@@ -182,7 +203,28 @@ const translations = {
       heading: "Vấn đề → phân tích → insight → tác động",
       description:
         "Mỗi thẻ làm nổi bật câu hỏi kinh doanh và các con số giúp bên liên quan nhìn rõ hệ thống hơn.",
+      problemLabel: "Vấn đề:",
       link: "Mở case study",
+      items: {
+        "olist-dw": {
+          title: "Kho dữ liệu thương mại điện tử Olist",
+          problem:
+            "Các file CSV rời rạc khiến việc tin cậy GMV, SLA giao hàng và hiệu suất danh mục trong 2 năm đơn hàng trở nên khó khăn.",
+          metrics: ["Đơn hàng đã giao", "Tỷ lệ đúng hạn"],
+        },
+        "rfm-segments": {
+          title: "Phân khúc khách hàng RFM",
+          problem:
+            "Marketing cần một cách nhóm khách hàng bền vững hơn các bảng tính rời rạc: ai trung thành, ai có nguy cơ rời bỏ, ai có giá trị cao.",
+          metrics: ["Khách hàng được chấm điểm", "Silhouette (k=3)"],
+        },
+        "ops-sla": {
+          title: "Lớp insight SLA giao hàng",
+          problem:
+            "Giao hàng trễ trước đây thường được bàn theo cảm tính. Đội vận hành cần một định nghĩa thống nhất về đúng hạn và cách truy nguyên nguyên nhân theo khu vực.",
+          metrics: ["Giao hàng đúng hạn", "Điểm đánh giá TB"],
+        },
+      },
     },
     dashboard: {
       kicker: "Trình diễn dashboard",

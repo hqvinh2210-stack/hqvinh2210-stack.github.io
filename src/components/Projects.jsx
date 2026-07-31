@@ -1,20 +1,22 @@
 import { Link } from "react-router-dom";
 import Reveal from "./Reveal.jsx";
 import ProjectPreview from "./ProjectPreview.jsx";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
 import { projects } from "../data/portfolio.js";
 
 export default function Projects() {
+  const { t } = useLanguage();
+
   return (
     <section id="projects" className="bg-white py-20 md:py-28">
       <div className="container-page">
         <Reveal>
-          <p className="section-kicker">Featured projects</p>
+          <p className="section-kicker">{t("projects.kicker")}</p>
           <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-tight text-navy md:text-4xl">
-            Problem → analysis → insight → impact
+            {t("projects.heading")}
           </h2>
           <p className="mt-3 max-w-[56ch] text-muted">
-            Each card highlights the business question and the numbers that
-            changed how stakeholders saw the system.
+            {t("projects.description")}
           </p>
         </Reveal>
 
@@ -26,20 +28,24 @@ export default function Projects() {
                   <ProjectPreview type={p.preview} />
                 </div>
                 <div className="flex flex-1 flex-col p-5 pt-4">
-                  <h3 className="text-lg font-semibold text-navy">{p.title}</h3>
+                  <h3 className="text-lg font-semibold text-navy">
+                    {t(`projects.items.${p.id}.title`)}
+                  </h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted">
-                    <span className="font-medium text-navy">Problem: </span>
-                    {p.problem}
+                    <span className="font-medium text-navy">{t("projects.problemLabel")} </span>
+                    {t(`projects.items.${p.id}.problem`)}
                   </p>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    {p.metrics.map((m) => (
+                    {p.metrics.map((m, metricIndex) => (
                       <div
                         key={m.label}
                         className="rounded-lg border border-line bg-surface px-3 py-2"
                       >
                         <div className="metric-num text-xl font-bold">{m.value}</div>
-                        <div className="text-[11px] text-muted">{m.label}</div>
+                        <div className="text-[11px] text-muted">
+                          {t(`projects.items.${p.id}.metrics.${metricIndex}`)}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -56,7 +62,7 @@ export default function Projects() {
                     to={p.href}
                     className="mt-5 inline-flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2"
                   >
-                    Open case study
+                    {t("projects.link")}
                     <span aria-hidden>→</span>
                   </Link>
                 </div>
