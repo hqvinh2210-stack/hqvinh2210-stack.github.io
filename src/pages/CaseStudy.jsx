@@ -20,7 +20,13 @@ import Nav from "../components/Nav.jsx";
 import Footer from "../components/Footer.jsx";
 import Reveal from "../components/Reveal.jsx";
 import ClusterScatter3D from "../components/ClusterScatter3D.jsx";
+import { CASE_STUDY_COPY, VI_CASE_STUDY, useLanguage } from "../contexts/LanguageContext.jsx";
 import { caseStudy } from "../data/portfolio.js";
+
+
+function localizedCaseStudy(language) {
+  return language === "vi" ? { ...caseStudy, ...VI_CASE_STUDY } : caseStudy;
+}
 
 const SEGMENT_COLORS = {
   Champions: "#2563eb",
@@ -59,11 +65,16 @@ function ChartTip({ active, payload, label }) {
 
 export default function CaseStudy() {
   const { slug } = useParams();
+  const { language } = useLanguage();
+  const copy = CASE_STUDY_COPY[language] || CASE_STUDY_COPY.en;
   const [monthly, setMonthly] = useState([]);
   const [dash, setDash] = useState(null);
   const [ml, setMl] = useState(null);
   const reduce = useReducedMotion();
-  const cs = slug === caseStudy.slug || slug === "olist-dw" ? caseStudy : null;
+  const cs =
+    slug === caseStudy.slug || slug === "olist-dw"
+      ? localizedCaseStudy(language)
+      : null;
 
   useEffect(() => {
     fetch("/assets/data/dashboard.json")
@@ -127,9 +138,9 @@ export default function CaseStudy() {
       <div className="min-h-[100dvh] bg-white">
         <Nav />
         <div className="container-page py-24 text-center">
-          <h1 className="text-2xl font-bold text-navy">Case study not found</h1>
+          <h1 className="text-2xl font-bold text-navy">{copy.notFound}</h1>
           <Link to="/" className="mt-4 inline-block text-primary">
-            Back home
+            {copy.backHome}
           </Link>
         </div>
         <Footer />
@@ -138,15 +149,15 @@ export default function CaseStudy() {
   }
 
   const sections = [
-    { id: "context", label: "Context" },
-    { id: "source", label: "Data source" },
-    { id: "eda", label: "EDA" },
-    { id: "warehouse", label: "Warehouse" },
-    { id: "method", label: "Methodology" },
-    { id: "clustering", label: "Clustering 3D" },
-    { id: "findings", label: "Key findings" },
-    { id: "recommend", label: "Recommendations" },
-    { id: "impact", label: "Impact" },
+    { id: "context", label: copy.sections.context },
+    { id: "source", label: copy.sections.source },
+    { id: "eda", label: copy.sections.eda },
+    { id: "warehouse", label: copy.sections.warehouse },
+    { id: "method", label: copy.sections.method },
+    { id: "clustering", label: copy.sections.clustering },
+    { id: "findings", label: copy.sections.findings },
+    { id: "recommend", label: copy.sections.recommend },
+    { id: "impact", label: copy.sections.impact },
   ];
 
   const metricCards = [
@@ -190,7 +201,7 @@ export default function CaseStudy() {
               to="/#projects"
               className="text-sm font-medium text-cyan-soft hover:text-white"
             >
-              ← Projects
+              {copy.backProjects}
             </Link>
             <h1 className="mt-4 max-w-3xl text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
               {cs.title}
@@ -229,11 +240,11 @@ export default function CaseStudy() {
           <div className="space-y-16">
             {/* Context */}
             <Reveal as="section" id="context">
-              <h2 className="text-2xl font-bold text-navy">Context</h2>
+              <h2 className="text-2xl font-bold text-navy">{copy.sections.context}</h2>
               <div className="mt-4 grid gap-4 sm:grid-cols-3">
                 <div className="card p-4">
                   <div className="text-xs font-semibold uppercase text-muted">
-                    Industry
+                    {copy.labels.industry}
                   </div>
                   <div className="mt-1 text-sm font-medium text-navy">
                     {cs.context.industry}
@@ -241,7 +252,7 @@ export default function CaseStudy() {
                 </div>
                 <div className="card p-4">
                   <div className="text-xs font-semibold uppercase text-muted">
-                    Period
+                    {copy.labels.period}
                   </div>
                   <div className="mt-1 font-mono text-sm font-medium text-primary">
                     {cs.context.period}
@@ -249,7 +260,7 @@ export default function CaseStudy() {
                 </div>
                 <div className="card p-4 sm:col-span-1">
                   <div className="text-xs font-semibold uppercase text-muted">
-                    Goal
+                    {copy.labels.goal}
                   </div>
                   <div className="mt-1 text-sm leading-relaxed text-navy">
                     {cs.context.goal}
@@ -260,7 +271,7 @@ export default function CaseStudy() {
 
             {/* Data source */}
             <Reveal as="section" id="source">
-              <h2 className="text-2xl font-bold text-navy">Data source</h2>
+              <h2 className="text-2xl font-bold text-navy">{copy.sections.source}</h2>
               <ul className="mt-4 space-y-2">
                 {cs.dataSource.map((d) => (
                   <li
@@ -282,7 +293,7 @@ export default function CaseStudy() {
               </p>
 
               <h3 className="mt-8 text-sm font-semibold text-navy">
-                Questions that drove the EDA
+                {copy.labels.questions}
               </h3>
               <ol className="mt-3 grid gap-2 md:grid-cols-2">
                 {cs.eda.questions.map((q, i) => (
@@ -299,16 +310,16 @@ export default function CaseStudy() {
               </ol>
 
               <h3 className="mt-8 text-sm font-semibold text-navy">
-                Source profile (9 tables)
+                {copy.labels.sourceProfile}
               </h3>
               <div className="mt-3 overflow-x-auto rounded-[12px] border border-line">
                 <table className="w-full min-w-[640px] border-collapse text-left text-sm">
                   <thead className="bg-surface text-xs uppercase tracking-wide text-muted">
                     <tr>
-                      <th className="px-4 py-3 font-semibold">File</th>
-                      <th className="px-4 py-3 font-semibold">Rows</th>
-                      <th className="px-4 py-3 font-semibold">Grain</th>
-                      <th className="px-4 py-3 font-semibold">Role in DW</th>
+                      <th className="px-4 py-3 font-semibold">{copy.labels.file}</th>
+                      <th className="px-4 py-3 font-semibold">{copy.labels.rows}</th>
+                      <th className="px-4 py-3 font-semibold">{copy.labels.grain}</th>
+                      <th className="px-4 py-3 font-semibold">{copy.labels.role}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -341,7 +352,7 @@ export default function CaseStudy() {
               </div>
 
               <h3 className="mt-8 text-sm font-semibold text-navy">
-                Cleaning and transform rules
+                {copy.labels.cleaning}
               </h3>
               <ul className="mt-3 space-y-2">
                 {cs.eda.cleaningRules.map((r) => (
@@ -359,16 +370,16 @@ export default function CaseStudy() {
                 <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                   {[
                     {
-                      label: "Delivered orders",
+                      label: copy.labels.deliveredOrders,
                       value: formatNum(kpi.delivered_orders),
                     },
-                    { label: "Total GMV", value: formatMoney(kpi.total_gmv) },
+                    { label: copy.labels.totalGmv, value: formatMoney(kpi.total_gmv) },
                     {
-                      label: "On-time rate",
+                      label: copy.labels.onTimeRate,
                       value: `${Number(kpi.on_time_rate_pct).toFixed(1)}%`,
                     },
                     {
-                      label: "Repeat customers",
+                      label: copy.labels.repeatCustomers,
                       value: `${kpi.repeat_customer_pct}%`,
                     },
                   ].map((m) => (
@@ -388,7 +399,7 @@ export default function CaseStudy() {
                 <div className="card p-4 md:p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-navy">
-                      Top categories by GMV
+                      {copy.labels.topCategories}
                     </h3>
                     <span className="font-mono text-[11px] text-muted">EDA → gold</span>
                   </div>
@@ -427,7 +438,7 @@ export default function CaseStudy() {
                       </ResponsiveContainer>
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted">
-                        Loading category mix…
+                        {copy.labels.loadingCategory}
                       </div>
                     )}
                   </div>
@@ -436,7 +447,7 @@ export default function CaseStudy() {
                 <div className="card p-4 md:p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-navy">
-                      Top states by GMV
+                      {copy.labels.topStates}
                     </h3>
                     <span className="font-mono text-[11px] text-muted">geo join</span>
                   </div>
@@ -470,7 +481,7 @@ export default function CaseStudy() {
                       </ResponsiveContainer>
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted">
-                        Loading regional mix…
+                        {copy.labels.loadingRegional}
                       </div>
                     )}
                   </div>
@@ -502,7 +513,7 @@ export default function CaseStudy() {
               </div>
 
               <h3 className="mt-8 text-sm font-semibold text-navy">
-                Design principles
+                {copy.labels.designPrinciples}
               </h3>
               <ul className="mt-3 grid gap-2 sm:grid-cols-2">
                 {cs.warehouse.designPrinciples.map((p) => (
@@ -516,7 +527,7 @@ export default function CaseStudy() {
               </ul>
 
               <h3 className="mt-8 text-sm font-semibold text-navy">
-                Fact grains
+                {copy.labels.factGrains}
               </h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {cs.warehouse.grains.map((g) => (
@@ -525,13 +536,13 @@ export default function CaseStudy() {
                       {g.fact}
                     </div>
                     <div className="mt-1 text-sm text-navy">{g.grain}</div>
-                    <div className="mt-1 text-xs text-muted">{g.rows} rows</div>
+                    <div className="mt-1 text-xs text-muted">{g.rows} {copy.labels.rowsSuffix}</div>
                   </div>
                 ))}
               </div>
 
               <h3 className="mt-8 text-sm font-semibold text-navy">
-                Quality checks in the pipeline
+                {copy.labels.qualityChecks}
               </h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 {cs.warehouse.qualityChecks.map((q) => (
@@ -553,7 +564,7 @@ export default function CaseStudy() {
               {tableStats.length > 0 && (
                 <>
                   <h3 className="mt-8 text-sm font-semibold text-navy">
-                    Gold layer row counts (live export)
+                    {copy.labels.goldRows}
                   </h3>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
                     {tableStats.map((t) => (
@@ -574,7 +585,7 @@ export default function CaseStudy() {
 
             {/* Methodology */}
             <Reveal as="section" id="method">
-              <h2 className="text-2xl font-bold text-navy">Methodology</h2>
+              <h2 className="text-2xl font-bold text-navy">{copy.labels.methodology}</h2>
               <ol className="mt-4 space-y-3">
                 {cs.methodology.map((step, i) => (
                   <li key={step} className="card flex gap-4 p-4">
@@ -591,11 +602,11 @@ export default function CaseStudy() {
             <Reveal as="section" id="clustering">
               <h2 className="text-2xl font-bold text-navy">{cs.clustering.title}</h2>
               <p className="mt-3 max-w-[65ch] text-sm leading-relaxed text-muted md:text-base">
-                Method: <span className="font-medium text-navy">{cs.clustering.method}</span>.
-                Features: {cs.clustering.features.join(", ")}. Customers scored:{" "}
+                {copy.labels.method}: <span className="font-medium text-navy">{cs.clustering.method}</span>.
+                {copy.labels.features}: {cs.clustering.features.join(", ")}. {copy.labels.customersScored}:{" "}
                 <span className="font-mono text-primary">{cs.clustering.nCustomers}</span>.
-                Selected <span className="font-mono text-primary">k={cs.clustering.k}</span>{" "}
-                via {cs.clustering.selectionRule}.
+                {copy.labels.selected} <span className="font-mono text-primary">k={cs.clustering.k}</span>{" "}
+                {copy.labels.via} {cs.clustering.selectionRule}.
               </p>
 
               {(() => {
@@ -603,17 +614,8 @@ export default function CaseStudy() {
                 if (!champs) return null;
                 return (
                   <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm leading-relaxed text-navy">
-                    <span className="font-semibold">Business read: </span>
-                    Champions are about{" "}
-                    <span className="font-mono font-semibold text-primary">
-                      {champs.pct}%
-                    </span>{" "}
-                    of customers but drive about{" "}
-                    <span className="font-mono font-semibold text-primary">
-                      {champs.gmv_share_pct}%
-                    </span>{" "}
-                    of GMV. A small high-value cohort carries most revenue; CRM
-                    should protect them first, then win back At Risk.
+                    <span className="font-semibold">{copy.labels.businessRead} </span>
+                    {copy.businessRead(champs)}
                   </div>
                 );
               })()}
@@ -621,28 +623,26 @@ export default function CaseStudy() {
               <div className="mt-6">
                 <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
                   <h3 className="text-sm font-semibold text-navy">
-                    Cluster scatter (RFM sample)
+                    {copy.labels.clusterScatter}
                   </h3>
                   <span className="font-mono text-[11px] text-muted">
-                    {scatter.length.toLocaleString()} points from gold RFM extract
+                    {scatter.length.toLocaleString()} {copy.labels.pointsFrom}
                   </span>
                 </div>
                 {scatter.length ? (
                   <ClusterScatter3D points={scatter} height={440} />
                 ) : (
                   <div className="flex h-80 items-center justify-center rounded-[12px] border border-line bg-surface text-sm text-muted">
-                    Loading cluster sample…
+                    {copy.labels.loadingCluster}
                   </div>
                 )}
                 <p className="mt-2 text-xs text-muted">
-                  Prefer 2D if motion is reduced or the device is slow. 3D adds
-                  frequency as depth; 2D keeps Recency × Monetary for a flat
-                  CRM view.
+                  {copy.labels.reducedMotion}
                 </p>
               </div>
 
               <h3 className="mt-10 text-sm font-semibold text-navy">
-                Evaluation metrics (final model)
+                {copy.labels.evalMetrics}
               </h3>
               <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 {metricCards.map((m) => (
@@ -654,7 +654,7 @@ export default function CaseStudy() {
                       {m.value != null ? formatNum(m.value) : "…"}
                     </div>
                     <div className="mt-1 text-[11px] font-medium text-primary">
-                      {m.better === "higher" ? "Higher is better" : "Lower is better"}
+                      {m.better === "higher" ? copy.labels.higherBetter : copy.labels.lowerBetter}
                     </div>
                     <p className="mt-2 text-[11px] leading-relaxed text-muted">{m.note}</p>
                   </div>
@@ -665,9 +665,9 @@ export default function CaseStudy() {
                 <div className="card p-4 md:p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-navy">
-                      k selection: silhouette vs k
+                      {copy.labels.kSelection}
                     </h3>
-                    <span className="font-mono text-[11px] text-muted">sample eval</span>
+                    <span className="font-mono text-[11px] text-muted">{copy.labels.sampleEval}</span>
                   </div>
                   <div className="h-56">
                     {byK.length ? (
@@ -708,7 +708,7 @@ export default function CaseStudy() {
                       </ResponsiveContainer>
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted">
-                        Loading k comparison…
+                        {copy.labels.loadingK}
                       </div>
                     )}
                   </div>
@@ -717,7 +717,7 @@ export default function CaseStudy() {
                 <div className="card p-4 md:p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-navy">
-                      Elbow: inertia vs k
+                      {copy.labels.elbow}
                     </h3>
                     <span className="font-mono text-[11px] text-muted">SSE</span>
                   </div>
@@ -752,7 +752,7 @@ export default function CaseStudy() {
                       </ResponsiveContainer>
                     ) : (
                       <div className="flex h-full items-center justify-center text-sm text-muted">
-                        Loading elbow curve…
+                        {copy.labels.loadingElbow}
                       </div>
                     )}
                   </div>
@@ -787,7 +787,7 @@ export default function CaseStudy() {
                               {row.k}
                               {selected && (
                                 <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
-                                  selected
+                                  {copy.labels.selectedBadge}
                                 </span>
                               )}
                             </td>
@@ -810,7 +810,7 @@ export default function CaseStudy() {
               )}
 
               <h3 className="mt-10 text-sm font-semibold text-navy">
-                Segment profiles
+                {copy.labels.segmentProfiles}
               </h3>
               <div className="mt-3 grid gap-4 md:grid-cols-3">
                 {segments.map((seg) => (
@@ -822,34 +822,34 @@ export default function CaseStudy() {
                       }}
                     />
                     <div className="p-5">
-                      <h4 className="font-semibold text-navy">{seg.segment}</h4>
+                      <h4 className="font-semibold text-navy">{copy.segmentNames[seg.segment] || seg.segment}</h4>
                       <div className="mt-2 flex flex-wrap gap-2 text-xs">
                         <span className="tag">
-                          {formatNum(seg.size)} cust ({seg.pct}%)
+                          {formatNum(seg.size)} {copy.labels.customersShort} ({seg.pct}%)
                         </span>
-                        <span className="tag">GMV share {seg.gmv_share_pct}%</span>
+                        <span className="tag">{copy.labels.gmvShare} {seg.gmv_share_pct}%</span>
                       </div>
                       <dl className="mt-4 space-y-2 text-xs">
                         <div className="flex justify-between gap-2">
-                          <dt className="text-muted">Recency (mean)</dt>
+                          <dt className="text-muted">{copy.labels.recencyMean}</dt>
                           <dd className="font-mono font-semibold text-navy">
                             {formatNum(seg.recency_mean)} d
                           </dd>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <dt className="text-muted">Frequency (mean)</dt>
+                          <dt className="text-muted">{copy.labels.frequencyMean}</dt>
                           <dd className="font-mono font-semibold text-navy">
                             {formatNum(seg.frequency_mean)}
                           </dd>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <dt className="text-muted">Monetary (mean)</dt>
+                          <dt className="text-muted">{copy.labels.monetaryMean}</dt>
                           <dd className="font-mono font-semibold text-navy">
                             {formatMoney(seg.monetary_mean)}
                           </dd>
                         </div>
                         <div className="flex justify-between gap-2">
-                          <dt className="text-muted">Silhouette (cluster)</dt>
+                          <dt className="text-muted">{copy.labels.silhouetteCluster}</dt>
                           <dd className="font-mono font-semibold text-primary">
                             {formatNum(seg.silhouette_mean)}
                           </dd>
@@ -864,14 +864,14 @@ export default function CaseStudy() {
                 <div className="card mt-6 p-4 md:p-5">
                   <div className="mb-3 flex items-center justify-between">
                     <h3 className="text-sm font-semibold text-navy">
-                      Segment size vs GMV share
+                      {copy.labels.segmentSize}
                     </h3>
                   </div>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart
                         data={segments.map((s) => ({
-                          name: s.segment.replace(" / Hibernating", ""),
+                          name: (copy.segmentNames[s.segment] || s.segment).replace(" / Hibernating", ""),
                           customers_pct: s.pct,
                           gmv_share_pct: s.gmv_share_pct,
                           fill: SEGMENT_COLORS[s.segment],
@@ -895,14 +895,14 @@ export default function CaseStudy() {
                         <Legend />
                         <Bar
                           dataKey="customers_pct"
-                          name="% customers"
+                          name={copy.labels.pctCustomers}
                           fill="#94a3b8"
                           radius={[4, 4, 0, 0]}
                           isAnimationActive={!reduce}
                         />
                         <Bar
                           dataKey="gmv_share_pct"
-                          name="% GMV"
+                          name={copy.labels.pctGmv}
                           radius={[4, 4, 0, 0]}
                           isAnimationActive={!reduce}
                         >
@@ -922,7 +922,7 @@ export default function CaseStudy() {
 
             {/* Findings */}
             <Reveal as="section" id="findings">
-              <h2 className="text-2xl font-bold text-navy">Key findings</h2>
+              <h2 className="text-2xl font-bold text-navy">{copy.labels.keyFindings}</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 {cs.findings.map((f) => (
                   <article key={f.title} className="card p-5">
@@ -935,10 +935,10 @@ export default function CaseStudy() {
               <div className="card mt-6 p-4 md:p-5">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-sm font-semibold text-navy">
-                    GMV & orders over time
+                    {copy.labels.gmvOrders}
                   </h3>
                   <span className="font-mono text-[11px] text-muted">
-                    from gold export
+                    {copy.labels.fromGold}
                   </span>
                 </div>
                 <div className="h-72">
@@ -968,7 +968,7 @@ export default function CaseStudy() {
                       <Tooltip
                         formatter={(value, name) => [
                           name === "gmv" ? formatMoney(value) : value,
-                          name === "gmv" ? "GMV" : "Orders",
+                          name === "gmv" ? "GMV" : copy.labels.orders,
                         ]}
                       />
                       <Area
@@ -988,7 +988,7 @@ export default function CaseStudy() {
             {/* Recommendations */}
             <Reveal as="section" id="recommend">
               <h2 className="text-2xl font-bold text-navy">
-                Business recommendations
+                {copy.labels.recommendations}
               </h2>
               <ul className="mt-4 space-y-3">
                 {cs.recommendations.map((r, i) => (
@@ -1002,7 +1002,7 @@ export default function CaseStudy() {
 
             {/* Impact */}
             <Reveal as="section" id="impact">
-              <h2 className="text-2xl font-bold text-navy">Impact / results</h2>
+              <h2 className="text-2xl font-bold text-navy">{copy.labels.impact}</h2>
               <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {cs.impact.map((m) => (
                   <div key={m.label} className="card p-5 text-center">
@@ -1020,9 +1020,9 @@ export default function CaseStudy() {
 
             <div className="rounded-[12px] border border-primary/20 bg-primary/5 p-6 text-center">
               <p className="text-sm text-muted">
-                Pipeline source lives in this repo under{" "}
+                {copy.labels.repoNote}{" "}
                 <code className="font-mono text-primary">data-warehouse/</code>
-                {" "}· EDA source tables under{" "}
+                {" "}· {copy.labels.edaSourceNote}{" "}
                 <code className="font-mono text-primary">EDA/</code>
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-3">
@@ -1030,13 +1030,13 @@ export default function CaseStudy() {
                   to="/#dashboards"
                   className="inline-flex rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-dark"
                 >
-                  View dashboard showcase
+                  {copy.labels.dashboardCta}
                 </Link>
                 <a
                   href="#clustering"
                   className="inline-flex rounded-lg border border-line bg-white px-5 py-2.5 text-sm font-semibold text-navy hover:border-primary/30"
                 >
-                  Jump to 3D clusters
+                  {copy.labels.clusterCta}
                 </a>
               </div>
             </div>
