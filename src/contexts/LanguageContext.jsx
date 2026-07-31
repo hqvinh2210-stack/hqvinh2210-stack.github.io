@@ -104,9 +104,16 @@ const translations = {
       charts: {
         gmv: "Monthly GMV",
         orders: "Orders by month",
+        payments: "Payment mix (top types)",
         hover: "hover for detail",
       },
+      directions: {
+        up: "up",
+        down: "down",
+      },
+      insightLabel: "Insight:",
       kpiRead: "KPI read:",
+      findingsLink: "See findings, EDA, and RFM clustering",
     },
     experience: {
       kicker: "Experience",
@@ -247,9 +254,16 @@ const translations = {
       charts: {
         gmv: "GMV theo tháng",
         orders: "Đơn hàng theo tháng",
+        payments: "Cơ cấu thanh toán (các loại top)",
         hover: "di chuột để xem chi tiết",
       },
+      directions: {
+        up: "tăng",
+        down: "giảm",
+      },
+      insightLabel: "Insight:",
       kpiRead: "Đọc KPI:",
+      findingsLink: "Xem findings, EDA và phân cụm RFM",
     },
     experience: {
       kicker: "Kinh nghiệm",

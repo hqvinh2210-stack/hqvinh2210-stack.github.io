@@ -12,6 +12,7 @@ import {
   CartesianGrid,
 } from "recharts";
 import { useReducedMotion } from "motion/react";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
 import Reveal from "./Reveal.jsx";
 
 function formatMoney(n) {
@@ -39,10 +40,10 @@ function ChartTip({ active, payload, label }) {
   );
 }
 
-function Insight({ children }) {
+function Insight({ children, label }) {
   return (
     <p className="mt-3 border-t border-line pt-3 text-xs leading-relaxed text-muted md:text-sm">
-      <span className="font-semibold text-navy">Insight: </span>
+      <span className="font-semibold text-navy">{label} </span>
       {children}
     </p>
   );
@@ -52,6 +53,8 @@ export default function DashboardShowcase() {
   const [dash, setDash] = useState(null);
   const [err, setErr] = useState(false);
   const reduce = useReducedMotion();
+  const { language, t } = useLanguage();
+  const isVi = language === "vi";
 
   useEffect(() => {
     fetch("/assets/data/dashboard.json")
@@ -80,41 +83,46 @@ export default function DashboardShowcase() {
 
   const insights = useMemo(() => {
     const series = dash?.sales_monthly || [];
-    let gmvInsight =
-      "Monthly GMV shows the growth ramp through 2017-2018 that finance should plan capacity around.";
+    let gmvInsight = t("dashboard.insights.gmv");
     if (series.length >= 2) {
       const last = series[series.length - 1];
       const prev = series[series.length - 2];
       if (prev?.gmv > 0) {
         const pct = (((last.gmv - prev.gmv) / prev.gmv) * 100).toFixed(0);
-        const dir = last.gmv >= prev.gmv ? "up" : "down";
-        gmvInsight = `Latest month ${last.year_month}: GMV ${formatMoney(last.gmv)}, ${dir} ${Math.abs(pct)}% vs prior month. Seasonality and ramp both matter for ops planning.`;
+        const dir = last.gmv >= prev.gmv ? t("dashboard.directions.up") : t("dashboard.directions.down");
+        gmvInsight = isVi
+          ? `Tháng mới nhất ${last.year_month}: GMV ${formatMoney(last.gmv)}, ${dir} ${Math.abs(pct)}% so với tháng trước. Cần tính cả mùa vụ và đà tăng khi lập kế hoạch vận hành.`
+          : `Latest month ${last.year_month}: GMV ${formatMoney(last.gmv)}, ${dir} ${Math.abs(pct)}% vs prior month. Seasonality and ramp both matter for ops planning.`;
       }
     }
 
-    let ordersInsight =
-      "Order volume tracks GMV closely; spikes flag campaign or marketplace events worth root-causing.";
+    let ordersInsight = t("dashboard.insights.orders");
     if (series.length) {
       const peak = series.reduce((a, b) => (b.orders > a.orders ? b : a), series[0]);
-      ordersInsight = `Peak orders in this window: ${peak.orders.toLocaleString()} in ${peak.year_month}. Volume spikes are the first place to check delivery SLA load.`;
+      ordersInsight = isVi
+        ? `Đỉnh đơn hàng trong giai đoạn này: ${peak.orders.toLocaleString()} vào ${peak.year_month}. Các đỉnh tăng là nơi đầu tiên cần kiểm tra tải SLA giao hàng.`
+        : `Peak orders in this window: ${peak.orders.toLocaleString()} in ${peak.year_month}. Volume spikes are the first place to check delivery SLA load.`;
     }
 
-    let payInsight =
-      "Payment mix shapes cash timing (card vs boleto) and installment risk.";
+    let payInsight = t("dashboard.insights.payments");
     if (payments.length) {
       const total = payments.reduce((s, p) => s + (p.value || 0), 0) || 1;
       const top = [...payments].sort((a, b) => b.value - a.value)[0];
       const share = ((top.value / total) * 100).toFixed(0);
-      payInsight = `${top.name} leads payment mix (~${share}% of top types shown). Cash-cycle and installment policies should follow this mix, not a flat average.`;
+      payInsight = isVi
+        ? `${top.name} dẫn đầu cơ cấu thanh toán (~${share}% trong các loại top hiển thị). Chính sách dòng tiền và trả góp nên bám theo cơ cấu này thay vì dùng một mức trung bình phẳng.`
+        : `${top.name} leads payment mix (~${share}% of top types shown). Cash-cycle and installment policies should follow this mix, not a flat average.`;
     }
 
     let kpiInsight = null;
     if (kpi) {
-      kpiInsight = `Delivered grain locks GMV at ${formatMoney(kpi.total_gmv)} with ${kpi.on_time_rate_pct}% on-time and only ${kpi.repeat_customer_pct}% repeat buyers. Reliability is strong; retention is the open lever.`;
+      kpiInsight = isVi
+        ? `Grain đơn đã giao chốt GMV ở ${formatMoney(kpi.total_gmv)} với ${kpi.on_time_rate_pct}% đúng hạn và chỉ ${kpi.repeat_customer_pct}% khách mua lại. Độ tin cậy đang tốt; giữ chân khách hàng là đòn bẩy còn mở.`
+        : `Delivered grain locks GMV at ${formatMoney(kpi.total_gmv)} with ${kpi.on_time_rate_pct}% on-time and only ${kpi.repeat_customer_pct}% repeat buyers. Reliability is strong; retention is the open lever.`;
     }
 
     return { gmvInsight, ordersInsight, payInsight, kpiInsight };
-  }, [dash, payments, kpi]);
+  }, [dash, payments, kpi, isVi, t]);
 
   return (
     <section id="dashboards" className="bg-surface py-20 md:py-28">
@@ -122,46 +130,45 @@ export default function DashboardShowcase() {
         <Reveal>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="section-kicker">Dashboard showcase</p>
+              <p className="section-kicker">{t("dashboard.kicker")}</p>
               <h2 className="mt-2 max-w-2xl text-3xl font-bold tracking-tight text-navy md:text-4xl">
-                Live aggregates from the Olist gold layer
+                {t("dashboard.heading")}
               </h2>
               <p className="mt-3 max-w-[56ch] text-muted">
-                Same KPI definitions as the warehouse export. Each chart includes
-                a one-line business read, not only a picture.
+                {t("dashboard.description")}
               </p>
             </div>
             <Link
               to="/case-study/olist-dw"
               className="inline-flex shrink-0 items-center justify-center rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-primary-dark"
             >
-              Open full case study
+              {t("dashboard.link")}
             </Link>
           </div>
         </Reveal>
 
         {err && (
           <div className="mt-8 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-            Could not load dashboard JSON. Run the warehouse export, then refresh.
+            {t("dashboard.error")}
           </div>
         )}
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             {
-              label: "Delivered orders",
+              label: t("dashboard.cards.delivered"),
               value: kpi ? kpi.delivered_orders.toLocaleString() : "-",
             },
             {
-              label: "Total GMV",
+              label: t("dashboard.cards.gmv"),
               value: kpi ? formatMoney(kpi.total_gmv) : "-",
             },
             {
-              label: "AOV",
+              label: t("dashboard.cards.aov"),
               value: kpi ? `R$${kpi.aov.toFixed(0)}` : "-",
             },
             {
-              label: "On-time rate",
+              label: t("dashboard.cards.onTime"),
               value: kpi ? `${kpi.on_time_rate_pct}%` : "-",
             },
           ].map((k, i) => (
@@ -178,7 +185,7 @@ export default function DashboardShowcase() {
         {insights.kpiInsight && (
           <Reveal>
             <p className="mt-3 max-w-[70ch] text-sm text-muted">
-              <span className="font-semibold text-navy">KPI read: </span>
+              <span className="font-semibold text-navy">{t("dashboard.kpiRead")} </span>
               {insights.kpiInsight}
             </p>
           </Reveal>
@@ -187,8 +194,8 @@ export default function DashboardShowcase() {
         <div className="mt-6 grid gap-6 lg:grid-cols-5">
           <Reveal className="card p-4 lg:col-span-3 md:p-5" delay={0.05}>
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-navy">Monthly GMV</h3>
-              <span className="font-mono text-[11px] text-muted">hover for detail</span>
+              <h3 className="text-sm font-semibold text-navy">{t("dashboard.charts.gmv")}</h3>
+              <span className="font-mono text-[11px] text-muted">{t("dashboard.charts.hover")}</span>
             </div>
             <div className="h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -226,12 +233,12 @@ export default function DashboardShowcase() {
                 </AreaChart>
               </ResponsiveContainer>
             </div>
-            <Insight>{insights.gmvInsight}</Insight>
+            <Insight label={t("dashboard.insightLabel")}>{insights.gmvInsight}</Insight>
           </Reveal>
 
           <Reveal className="card p-4 lg:col-span-2 md:p-5" delay={0.1}>
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-sm font-semibold text-navy">Orders by month</h3>
+              <h3 className="text-sm font-semibold text-navy">{t("dashboard.charts.orders")}</h3>
             </div>
             <div className="h-64 md:h-72">
               <ResponsiveContainer width="100%" height="100%">
@@ -260,14 +267,14 @@ export default function DashboardShowcase() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <Insight>{insights.ordersInsight}</Insight>
+            <Insight label={t("dashboard.insightLabel")}>{insights.ordersInsight}</Insight>
           </Reveal>
         </div>
 
         {payments.length > 0 && (
           <Reveal className="card mt-6 p-4 md:p-5" delay={0.08}>
             <h3 className="mb-3 text-sm font-semibold text-navy">
-              Payment mix (top types)
+              {t("dashboard.charts.payments")}
             </h3>
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
@@ -292,7 +299,7 @@ export default function DashboardShowcase() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <Insight>{insights.payInsight}</Insight>
+            <Insight label={t("dashboard.insightLabel")}>{insights.payInsight}</Insight>
           </Reveal>
         )}
 
@@ -301,7 +308,7 @@ export default function DashboardShowcase() {
             to="/case-study/olist-dw#findings"
             className="inline-flex rounded-lg border border-line bg-white px-5 py-2.5 text-sm font-semibold text-navy transition hover:border-primary/30 hover:text-primary"
           >
-            See findings, EDA, and RFM clustering
+            {t("dashboard.findingsLink")}
           </Link>
         </Reveal>
       </div>
