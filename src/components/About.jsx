@@ -9,7 +9,8 @@ import {
 import { Link } from "react-router-dom";
 import { useReducedMotion } from "motion/react";
 import Reveal from "./Reveal.jsx";
-import { profile, skillGroups, skillLevels, skillRadar } from "../data/portfolio.js";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { skillGroups, skillLevels, skillRadar } from "../data/portfolio.js";
 
 const LEVEL_STYLE = {
   Daily: "bg-primary/10 text-primary border-primary/20",
@@ -19,24 +20,25 @@ const LEVEL_STYLE = {
 
 export default function About() {
   const reduce = useReducedMotion();
+  const { t } = useLanguage();
 
   return (
     <section id="about" className="bg-surface py-20 md:py-28">
       <div className="container-page">
         <Reveal>
-          <p className="section-kicker">About</p>
+          <p className="section-kicker">{t("about.kicker")}</p>
           <h2 className="mt-2 max-w-xl text-3xl font-bold tracking-tight text-navy md:text-4xl">
-            Analytical by default. Story-driven by design.
+            {t("about.heading")}
           </h2>
         </Reveal>
 
         <div className="mt-12 grid items-start gap-10 lg:grid-cols-2 lg:gap-14">
           <Reveal delay={0.05}>
             <p className="max-w-[58ch] text-base leading-relaxed text-muted md:text-lg">
-              {profile.bio}
+              {t("profile.bio")}
             </p>
             <p className="mt-4 max-w-[58ch] text-base leading-relaxed text-muted">
-              Every engagement follows the same arc:{" "}
+              {t("about.intro")}{" "}
               <span className="font-semibold text-navy">problem</span> →{" "}
               <span className="font-semibold text-navy">analysis</span> →{" "}
               <span className="font-semibold text-navy">insight</span> →{" "}
@@ -55,7 +57,7 @@ export default function About() {
                 </span>
               ))}
               <span className="self-center text-[11px] text-muted">
-                = usage depth, not a self-scored %
+                {t("about.usageDepth")}
               </span>
             </div>
 
@@ -102,14 +104,14 @@ export default function About() {
 
           <Reveal delay={0.1} className="card p-5 md:p-6">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <h3 className="text-sm font-semibold text-navy">Skill usage map</h3>
+              <h3 className="text-sm font-semibold text-navy">{t("about.mapTitle")}</h3>
               <span className="font-mono text-[11px] text-muted">
-                Daily · Project · Learning
+                {t("about.labels.daily")} · {t("about.labels.project")} ·{" "}
+                {t("about.labels.learning")}
               </span>
             </div>
             <p className="mb-3 text-xs text-muted">
-              Axis shows how often I use each skill in real work, not a 0-100
-              proficiency score.
+              {t("about.mapDescription")}
             </p>
             <div className="h-[300px] w-full md:h-[340px]">
               <ResponsiveContainer width="100%" height="100%">

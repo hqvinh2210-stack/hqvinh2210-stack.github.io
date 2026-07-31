@@ -1,19 +1,21 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { profile } from "../data/portfolio.js";
+import { supportedLanguages, useLanguage } from "../contexts/LanguageContext.jsx";
 
 const links = [
-  { href: "/#about", label: "About" },
-  { href: "/#projects", label: "Projects" },
-  { href: "/#dashboards", label: "Dashboards" },
-  { href: "/#experience", label: "Experience" },
-  { href: "/#contact", label: "Contact" },
+  { href: "/#about", key: "nav.about" },
+  { href: "/#projects", key: "nav.projects" },
+  { href: "/#dashboards", key: "nav.dashboards" },
+  { href: "/#experience", key: "nav.experience" },
+  { href: "/#contact", key: "nav.contact" },
 ];
 
 export default function Nav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const home = location.pathname === "/";
+  const { language, setLanguage, t } = useLanguage();
 
   return (
     <header className="sticky top-0 z-50 border-b border-line/80 bg-white/90 backdrop-blur-md">
@@ -33,7 +35,7 @@ export default function Nav() {
                 href={l.href.replace("/#", "#")}
                 className="text-sm font-medium text-muted transition hover:text-primary"
               >
-                {l.label}
+                {t(l.key)}
               </a>
             ) : (
               <Link
@@ -41,26 +43,59 @@ export default function Nav() {
                 to={l.href}
                 className="text-sm font-medium text-muted transition hover:text-primary"
               >
-                {l.label}
+                {t(l.key)}
               </Link>
             )
           )}
+          <div className="flex items-center gap-2 rounded-full border border-line bg-surface px-2 py-1">
+            {supportedLanguages.map((item) => (
+              <button
+                key={item.code}
+                type="button"
+                onClick={() => setLanguage(item.code)}
+                className={`rounded-full px-2.5 py-1 text-xs font-semibold transition ${
+                  language === item.code
+                    ? "bg-primary text-white"
+                    : "text-muted hover:text-primary"
+                }`}
+                aria-label={`Switch to ${item.code === "en" ? "English" : "Tiếng Việt"}`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
           <a
             href={home ? "#contact" : "/#contact"}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary-dark"
           >
-            Hire me
+            {t("nav.hire")}
           </a>
         </nav>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line text-navy md:hidden"
-          aria-label="Toggle menu"
-          onClick={() => setOpen((v) => !v)}
-        >
-          <span className="text-lg">{open ? "×" : "☰"}</span>
-        </button>
+        <div className="flex items-center gap-2 md:hidden">
+          <div className="flex items-center rounded-full border border-line bg-surface px-1.5 py-1">
+            {supportedLanguages.map((item) => (
+              <button
+                key={item.code}
+                type="button"
+                onClick={() => setLanguage(item.code)}
+                className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                  language === item.code ? "bg-primary text-white" : "text-muted"
+                }`}
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-line text-navy"
+            aria-label={t("nav.menuLabel")}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className="text-lg">{open ? "×" : "☰"}</span>
+          </button>
+        </div>
       </div>
 
       {open && (
@@ -73,7 +108,7 @@ export default function Nav() {
                 onClick={() => setOpen(false)}
                 className="text-sm font-medium text-navy"
               >
-                {l.label}
+                {t(l.key)}
               </Link>
             ))}
           </div>

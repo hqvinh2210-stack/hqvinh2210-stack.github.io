@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { motion, useReducedMotion } from "motion/react";
 import { profile } from "../data/portfolio.js";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
 import HeroViz from "./HeroViz.jsx";
 
 export default function Hero() {
   const reduce = useReducedMotion();
+  const { t } = useLanguage();
 
   return (
     <section className="relative overflow-hidden bg-navy text-white">
@@ -25,7 +27,7 @@ export default function Hero() {
             transition={{ duration: 0.45 }}
           >
             <span className="h-1.5 w-1.5 rounded-full bg-cyan" />
-            Open to analyst roles · {profile.location}
+            {t("hero.badge")} · {t("profile.location")}
           </motion.p>
 
           <motion.h1
@@ -36,7 +38,7 @@ export default function Hero() {
           >
             {profile.name}
             <span className="mt-2 block text-2xl font-semibold text-cyan-soft md:text-3xl">
-              {profile.title}
+              {t("profile.title")}
             </span>
           </motion.h1>
 
@@ -46,7 +48,7 @@ export default function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.12 }}
           >
-            {profile.valueProp}
+            {t("profile.valueProp")}
           </motion.p>
 
           <motion.div
@@ -59,13 +61,13 @@ export default function Hero() {
               href="#projects"
               className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white transition hover:bg-primary-dark"
             >
-              View projects
+              {t("hero.ctaProjects")}
             </a>
             <Link
               to="/case-study/olist-dw"
               className="rounded-lg border border-white/20 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
             >
-              Read case study
+              {t("hero.ctaCaseStudy")}
             </Link>
           </motion.div>
 
@@ -76,9 +78,9 @@ export default function Hero() {
             transition={{ delay: 0.3 }}
           >
             {[
-              { k: "96.5K", v: "orders modeled" },
-              { k: "R$13.2M", v: "GMV unified" },
-              { k: "93%", v: "on-time baseline" },
+              { k: "96.5K", v: t("hero.metrics.orders") },
+              { k: "R$13.2M", v: t("hero.metrics.gmv") },
+              { k: "93%", v: t("hero.metrics.onTime") },
             ].map((m) => (
               <div key={m.v}>
                 <div className="font-mono text-lg font-semibold text-cyan-soft md:text-xl">
